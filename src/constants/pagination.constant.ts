@@ -1,0 +1,1 @@
+export const PAGE_TAKE_DEFAULT = 20;

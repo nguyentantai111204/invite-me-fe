@@ -83,13 +83,14 @@ Sử dụng 100% Material UI (MUI). Tuyệt đối KHÔNG dùng Tailwind, Bootst
 - **Ít style:** Viết trực tiếp bằng prop `sx` vào file `.tsx`.
 - **Nhiều style:** Tạo file `.styles.ts` nằm cùng cấp. Dùng `styled()` API hoặc export object `sx`.
 
+- **No Barrel Exports:** Không sử dụng file `index.ts` trung gian để re-export. Luôn import trực tiếp từ file đích (ví dụ: `import { StackRow } from "@/components/shared/stack-custom/stack-custom"`).
+
 Ví dụ cấu trúc Component:
 
 ```plaintext
 components/header/
-├── index.ts             # Export Component
 ├── header.tsx           # Chứa UI & Logic
-└── header.styles.ts     # Khai báo styled components
+└── header.styles.ts     # Khai báo styles / styled components (nếu có)
 ```
 
 ---
