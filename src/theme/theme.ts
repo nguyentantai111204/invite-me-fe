@@ -1,5 +1,14 @@
 import { createTheme } from "@mui/material/styles";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import {
+  COLOR,
+  RADIUS,
+  SHADOW,
+  FONT_WEIGHT,
+  FONT_SIZE,
+  LINE_HEIGHT,
+  LETTER_SPACING,
+  FONT_FAMILY,
+} from "@/constants/style.constant";
 
 export const theme = createTheme({
   palette: {
@@ -51,19 +60,74 @@ export const theme = createTheme({
     borderRadius: RADIUS.md,
   },
   typography: {
-    fontFamily: [
-      "Inter",
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-    ].join(","),
+    fontFamily: FONT_FAMILY.sans,
+    h1: {
+      fontSize: FONT_SIZE["5xl"],
+      fontWeight: FONT_WEIGHT.extrabold,
+      lineHeight: LINE_HEIGHT.tight,
+      letterSpacing: LETTER_SPACING.tight,
+    },
+    h2: {
+      fontSize: FONT_SIZE["4xl"],
+      fontWeight: FONT_WEIGHT.extrabold,
+      lineHeight: LINE_HEIGHT.tight,
+      letterSpacing: LETTER_SPACING.tight,
+    },
+    h3: {
+      fontSize: FONT_SIZE["3xl"],
+      fontWeight: FONT_WEIGHT.bold,
+      lineHeight: LINE_HEIGHT.snug,
+    },
+    h4: {
+      fontSize: FONT_SIZE["2xl"],
+      fontWeight: FONT_WEIGHT.bold,
+      lineHeight: LINE_HEIGHT.snug,
+    },
+    h5: {
+      fontSize: FONT_SIZE.xl,
+      fontWeight: FONT_WEIGHT.semibold,
+      lineHeight: LINE_HEIGHT.normal,
+    },
+    h6: {
+      fontSize: FONT_SIZE.lg,
+      fontWeight: FONT_WEIGHT.semibold,
+      lineHeight: LINE_HEIGHT.normal,
+    },
+    subtitle1: {
+      fontSize: FONT_SIZE.lg,
+      fontWeight: FONT_WEIGHT.semibold,
+      lineHeight: LINE_HEIGHT.normal,
+    },
+    subtitle2: {
+      fontSize: FONT_SIZE.sm,
+      fontWeight: FONT_WEIGHT.semibold,
+      lineHeight: LINE_HEIGHT.normal,
+    },
+    body1: {
+      fontSize: FONT_SIZE.md,
+      fontWeight: FONT_WEIGHT.regular,
+      lineHeight: LINE_HEIGHT.relaxed,
+    },
+    body2: {
+      fontSize: FONT_SIZE.sm,
+      fontWeight: FONT_WEIGHT.regular,
+      lineHeight: LINE_HEIGHT.relaxed,
+    },
     button: {
+      fontSize: FONT_SIZE.sm,
+      fontWeight: FONT_WEIGHT.semibold,
       textTransform: "none",
-      fontWeight: 600,
+    },
+    caption: {
+      fontSize: FONT_SIZE.xs,
+      fontWeight: FONT_WEIGHT.medium,
+      lineHeight: LINE_HEIGHT.normal,
+    },
+    overline: {
+      fontSize: FONT_SIZE.xs,
+      fontWeight: FONT_WEIGHT.bold,
+      letterSpacing: LETTER_SPACING.wider,
+      textTransform: "uppercase",
     },
   },
   components: {
@@ -76,13 +140,18 @@ export const theme = createTheme({
             boxShadow: SHADOW.sm,
           },
         },
-        containedPrimary: {
-          background: COLOR.btnGradient,
-          "&:hover": {
-            background: COLOR.btnHoverGradient,
+      },
+      variants: [
+        {
+          props: { variant: "contained", color: "primary" },
+          style: {
+            background: COLOR.btnGradient,
+            "&:hover": {
+              background: COLOR.btnHoverGradient,
+            },
           },
         },
-      },
+      ],
     },
     MuiPaper: {
       styleOverrides: {

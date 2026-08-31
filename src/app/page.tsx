@@ -1,18 +1,18 @@
 import React from "react";
-import { Container, Typography, Button } from "@mui/material";
+import { Container, Button } from "@mui/material";
 import Link from "next/link";
-import { StackCenter, StackColAlignJustCenter } from "@/components/shared/stack-custom/stack-custom";
+import { StackColAlignJustCenter, HeadingElement, TextElement } from "@/components/shared";
 
 export default function HomePage() {
   return (
     <Container maxWidth="lg" sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <StackColAlignJustCenter spacing={3}>
-        <Typography variant="h3" sx={{ fontWeight: "bold", color: "primary.main" }}>
+        <HeadingElement variant="h3" weight="bold" gradient="gold">
           InviteMe Card Editor
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ textAlign: "center", maxWidth: 600 }}>
+        </HeadingElement>
+        <TextElement colorVariant="secondary" align="center" sx={{ maxWidth: 600 }}>
           Nền tảng thiết kế và chỉnh sửa thiệp mời điện tử trực quan, hiện đại và chuẩn hóa.
-        </Typography>
+        </TextElement>
         <Button
           component={Link}
           href="/editor/demo-card"
