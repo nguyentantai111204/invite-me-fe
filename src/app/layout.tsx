@@ -1,9 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { theme } from "@/theme/theme";
+import { AppThemeProvider } from "@/components/shared/theme-provider";
 import { ReduxProvider } from "@/store/provider";
 
 export const metadata: Metadata = {
@@ -19,11 +17,10 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
-        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
+        <AppRouterCacheProvider>
+          <AppThemeProvider>
             <ReduxProvider>{children}</ReduxProvider>
-          </ThemeProvider>
+          </AppThemeProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

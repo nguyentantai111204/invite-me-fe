@@ -53,6 +53,8 @@ export const TypographyElement = React.forwardRef<HTMLElement, ITypographyCustom
   }
 );
 
+TypographyElement.displayName = "TypographyElement";
+
 // Heading Component (tiêu đề h1 - h6 với mặc định font chữ đậm)
 export const HeadingElement = React.forwardRef<HTMLElement, ITypographyCustomProps>(
   ({ variant = "h2", weight = "bold", ...props }, ref) => {
@@ -67,6 +69,8 @@ export const HeadingElement = React.forwardRef<HTMLElement, ITypographyCustomPro
   }
 );
 
+HeadingElement.displayName = "HeadingElement";
+
 // Text Component (đoạn văn body1 / body2 với styling tinh gọn)
 export const TextElement = React.forwardRef<HTMLElement, ITypographyCustomProps>(
   ({ variant = "body1", colorVariant = "primary", ...props }, ref) => {
@@ -80,3 +84,5 @@ export const TextElement = React.forwardRef<HTMLElement, ITypographyCustomProps>
     );
   }
 );
+
+TextElement.displayName = "TextElement";
