@@ -127,6 +127,18 @@ import {
   WarningAmber,
   ZoomIn,
   ZoomOut,
+  // Thêm các icon mới cho Editor & View
+  Sync,
+  PhoneIphone,
+  Laptop,
+  People,
+  Event,
+  AccessTime,
+  CardGiftcard,
+  LocationOn,
+  Directions,
+  PhotoCamera,
+  Restaurant,
 } from "@mui/icons-material";
 
 export const ICON_MAP = {
@@ -171,6 +183,7 @@ export const ICON_MAP = {
   Tune,
   FilterList,
   TouchApp,
+  Sync,
 
   // Editor Tools & Canvas
   TextFormat,
@@ -207,6 +220,10 @@ export const ICON_MAP = {
   Group,
   GroupWork,
   GridOn,
+  People,
+  Event,
+  AccessTime,
+  CardGiftcard,
 
   // Alignment & Transform
   AlignHorizontalLeft,
@@ -231,7 +248,7 @@ export const ICON_MAP = {
   FullscreenExit,
   DragIndicator,
 
-  // Navigation & Chevrons
+  // Navigation & Chevrons & Devices
   Menu,
   MoreVert,
   MoreHoriz,
@@ -247,6 +264,10 @@ export const ICON_MAP = {
   ArrowForwardIos,
   ExpandMore,
   ExpandLess,
+  PhoneIphone,
+  Laptop,
+  LocationOn,
+  Directions,
 
   // Status & Feedback
   AutoAwesome,
@@ -271,4 +292,8 @@ export const ICON_MAP = {
   VolumeOff,
   VolumeMute,
   VolumeDown,
+  PhotoCamera,
+  Restaurant,
 };
+
+export type IconName = keyof typeof ICON_MAP;

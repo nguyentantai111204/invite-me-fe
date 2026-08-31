@@ -1,5 +1,5 @@
 import React from "react";
-import { ButtonProps as MuiButtonProps } from "@mui/material/Button";
+import { ButtonProps as MuiButtonProps } from "@mui/material";
 import { RADIUS } from "@/constants/style.constant";
 
 export type ButtonVariant =
@@ -21,4 +21,7 @@ export interface IButtonElementProps extends Omit<MuiButtonProps, "variant"> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   rounded?: ButtonRounded;
+  target?: string;
+  rel?: string;
+  component?: React.ElementType;
 }

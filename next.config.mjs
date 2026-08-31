@@ -6,6 +6,10 @@ const nextConfig = {
     "@mui/icons-material",
     "@mui/material-nextjs",
   ],
+  webpack: (config) => {
+    config.externals = [...(config.externals || []), { canvas: "canvas" }];
+    return config;
+  },
 };
 
 export default nextConfig;
