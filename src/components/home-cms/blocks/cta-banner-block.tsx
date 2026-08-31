@@ -33,7 +33,7 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
           sx={{
             background: COLOR.btnGradient,
             color: COLOR.textInverse,
-            borderRadius: RADIUS.xl,
+            borderRadius: RADIUS.lg,
             p: { xs: 5, md: 8 },
             textAlign: "center",
             boxShadow: SHADOW.xl,
@@ -67,7 +67,7 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
                       <IconElement name={data.primaryButton.iconName} size="sm" />
                     ) : undefined
                   }
-                  sx={{ px: 4, py: 1.5, fontSize: "1rem" }}
+                  sx={{ px: 4, py: 1.5 }}
                 >
                   {data.primaryButton.text}
                 </ButtonElement>
@@ -89,7 +89,6 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
                     },
                     px: 3.5,
                     py: 1.5,
-                    fontSize: "1rem",
                   }}
                 >
                   {data.secondaryButton.text}

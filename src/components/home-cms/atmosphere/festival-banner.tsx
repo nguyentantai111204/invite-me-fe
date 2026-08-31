@@ -4,9 +4,8 @@ import React, { useState } from "react";
 import { Box, Container, IconButton } from "@mui/material";
 import Link from "next/link";
 import { IFestivalBannerConfig } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS } from "@/constants/style.constant";
-import { TextElement, IconElement } from "@/components/shared";
-import { STACK_ROW_ALIGN_JUST_CENTER } from "@/components/shared/stack-custom/stack-custom.style";
+import { COLOR, RADIUS, FONT_SIZE, FONT_WEIGHT, LETTER_SPACING } from "@/constants/style.constant";
+import { TextElement, IconElement, STACK_ROW_ALIGN_JUST_CENTER } from "@/components/shared";
 
 interface IFestivalBannerProps {
   config?: IFestivalBannerConfig;
@@ -20,12 +19,14 @@ export const FestivalBanner: React.FC<IFestivalBannerProps> = ({ config }) => {
   return (
     <Box
       sx={{
+        width: "100%",
         backgroundColor: config.bgColor || COLOR.bgDark,
         color: COLOR.textInverse,
         py: 1,
         px: 2,
         position: "relative",
         zIndex: 100,
+        borderRadius: 0,
         borderBottom: `1px solid ${COLOR.borderGoldLight}`,
       }}
     >
@@ -45,10 +46,10 @@ export const FestivalBanner: React.FC<IFestivalBannerProps> = ({ config }) => {
               borderRadius: RADIUS.full,
               px: 1.2,
               py: 0.2,
-              fontSize: "0.75rem",
-              fontWeight: "bold",
+              fontSize: FONT_SIZE.xs,
+              fontWeight: FONT_WEIGHT.bold,
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
+              letterSpacing: LETTER_SPACING.wide,
             }}
           >
             {config.badge}
@@ -64,8 +65,8 @@ export const FestivalBanner: React.FC<IFestivalBannerProps> = ({ config }) => {
             href={config.link}
             style={{
               color: COLOR.gold.light,
-              fontWeight: 600,
-              fontSize: "0.875rem",
+              fontWeight: FONT_WEIGHT.semibold,
+              fontSize: FONT_SIZE.sm,
               textDecoration: "underline",
               marginLeft: 4,
             }}

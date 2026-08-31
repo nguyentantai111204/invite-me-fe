@@ -4,6 +4,7 @@ import React from "react";
 import { Box } from "@mui/material";
 import { IHomeCmsConfig } from "@/interfaces/home-cms.interface";
 import { Header, Footer } from "@/components/layout";
+import { STACK_COL_ALIGN_JUST_START } from "@/components/shared";
 import { BLOCK_REGISTRY } from "./registry/block-registry";
 import { SeasonalParticles } from "./atmosphere/seasonal-particles";
 import { BgmAudioPlayer } from "./atmosphere/bgm-audio-player";
@@ -21,7 +22,7 @@ export const HomeBlockRenderer: React.FC<IHomeBlockRendererProps> = ({ config })
     .sort((a, b) => a.order - b.order);
 
   return (
-    <Box sx={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ ...STACK_COL_ALIGN_JUST_START, position: "relative", minHeight: "100vh", width: "100%" }}>
       {/* 1. Header Festival Notification Banner */}
       <FestivalBanner config={atmosphere?.festivalBanner} />
 
@@ -35,7 +36,7 @@ export const HomeBlockRenderer: React.FC<IHomeBlockRendererProps> = ({ config })
       <BgmAudioPlayer config={atmosphere?.bgMusic} />
 
       {/* 5. Dynamic Section Blocks Rendered in Order */}
-      <Box component="main" sx={{ flex: 1 }}>
+      <Box component="main" sx={{ width: "100%", flex: 1 }}>
         {activeBlocks.map((block) => {
           const Component = BLOCK_REGISTRY[block.type];
 

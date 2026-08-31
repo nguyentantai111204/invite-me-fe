@@ -209,3 +209,12 @@ export const StackCenter: React.FC<ICustomStackProps> = ({
     {...props}
   />
 );
+
+// Convenient aliases
+export const StackRow = StackRowAlignJustStart;
+export const StackCol = StackColAlignJustStart;
+export const StackRowBetween = StackRowAlignJustBetween;
+export const StackColBetween = StackColAlignJustBetween;
+export const StackRowCenter = StackRowAlignJustCenter;
+export const StackColCenter = StackColAlignJustCenter;
+

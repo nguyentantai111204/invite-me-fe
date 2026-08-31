@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip } from "@mui/material";
 import Link from "next/link";
 import { IHeroBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -12,6 +12,7 @@ import {
   IconElement,
   StackColAlignJustCenter,
   StackRowAlignJustCenter,
+  StackCenter,
 } from "@/components/shared";
 
 interface IHeroBlockProps {
@@ -42,7 +43,8 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                     backgroundColor: "rgba(183, 134, 40, 0.1)",
                     border: `1px solid ${COLOR.borderGold}`,
                     color: COLOR.textGold,
-                    fontWeight: 600,
+                    fontWeight: FONT_WEIGHT.semibold,
+                    fontSize: FONT_SIZE.xs,
                     mb: 3,
                     px: 1,
                   }}
@@ -53,7 +55,6 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                 variant="h1"
                 weight="extrabold"
                 sx={{
-                  fontSize: { xs: "2.25rem", sm: "3rem", md: "3.75rem" },
                   lineHeight: 1.15,
                   mb: 2.5,
                 }}
@@ -108,7 +109,7 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                         <IconElement name={data.primaryButton.iconName} size="sm" />
                       ) : undefined
                     }
-                    sx={{ px: 4, py: 1.5, fontSize: "1rem" }}
+                    sx={{ px: 4, py: 1.5 }}
                   >
                     {data.primaryButton.text}
                   </ButtonElement>
@@ -126,7 +127,7 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                         <IconElement name={data.secondaryButton.iconName} size="sm" />
                       ) : undefined
                     }
-                    sx={{ px: 3.5, py: 1.5, fontSize: "1rem" }}
+                    sx={{ px: 3.5, py: 1.5 }}
                   >
                     {data.secondaryButton.text}
                   </ButtonElement>
@@ -151,13 +152,7 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
           </Grid>
 
           <Grid size={{ xs: 12, md: 5 }}>
-            <Box
-              sx={{
-                position: "relative",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
+            <StackCenter sx={{ position: "relative" }}>
               {/* Luxury Wedding Card Mockup */}
               <Paper
                 elevation={6}
@@ -194,21 +189,18 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                 {/* Card Inner Content */}
                 <Box sx={{ p: 4, textAlign: "center" }}>
                   <StackColAlignJustCenter spacing={1.5}>
-                    <Box
+                    <StackCenter
                       sx={{
                         width: 44,
                         height: 44,
                         borderRadius: RADIUS.full,
                         backgroundColor: COLOR.rose[50],
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
                         color: COLOR.rose.main,
                         mb: 1,
                       }}
                     >
                       <IconElement name="Favorite" size="sm" />
-                    </Box>
+                    </StackCenter>
 
                     <HeadingElement
                       variant="h4"
@@ -250,7 +242,7 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                   </StackColAlignJustCenter>
                 </Box>
               </Paper>
-            </Box>
+            </StackCenter>
           </Grid>
         </Grid>
       </Container>

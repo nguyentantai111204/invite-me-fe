@@ -4,13 +4,14 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import Link from "next/link";
 import { IPricingBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
   ButtonElement,
   IconElement,
   StackColAlignJustCenter,
+  StackRow,
   STACK_COL_ALIGN_JUST_BETWEEN,
 } from "@/components/shared";
 
@@ -37,7 +38,8 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
               sx={{
                 backgroundColor: "rgba(183, 134, 40, 0.1)",
                 color: COLOR.textGold,
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.semibold,
+                fontSize: FONT_SIZE.xs,
                 mb: 1,
               }}
             />
@@ -83,13 +85,13 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
                       transform: "translateX(-50%)",
                       backgroundColor: COLOR.btnSecondary,
                       color: COLOR.textInverse,
-                      fontWeight: "bold",
-                      fontSize: "0.75rem",
+                      fontWeight: FONT_WEIGHT.bold,
+                      fontSize: FONT_SIZE.xs,
                     }}
                   />
                 )}
 
-                <Box>
+                <Box sx={{ width: "100%" }}>
                   <HeadingElement variant="h4" weight="bold">
                     {plan.name}
                   </HeadingElement>
@@ -98,14 +100,14 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
                     {plan.description}
                   </TextElement>
 
-                  <Box sx={{ display: "flex", alignItems: "baseline", mb: 3 }}>
+                  <StackRow sx={{ alignItems: "baseline", mb: 3 }}>
                     <HeadingElement variant="h2" weight="extrabold" gradient="gold">
                       {plan.price}
                     </HeadingElement>
                     <TextElement size="sm" colorVariant="secondary" sx={{ ml: 1 }}>
                       {plan.period}
                     </TextElement>
-                  </Box>
+                  </StackRow>
 
                   <List sx={{ mb: 4, py: 0 }}>
                     {plan.features.map((feat, fIdx) => (

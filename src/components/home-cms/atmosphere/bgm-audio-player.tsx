@@ -4,7 +4,12 @@ import React, { useState, useRef } from "react";
 import { Box, IconButton, Tooltip, keyframes } from "@mui/material";
 import { IBgmMusicConfig } from "@/interfaces/home-cms.interface";
 import { COLOR, SHADOW, RADIUS } from "@/constants/style.constant";
-import { TextElement, IconElement } from "@/components/shared";
+import {
+  TextElement,
+  IconElement,
+  StackRowAlignJustCenter,
+  STACK_ROW_ALIGN_JUST_CENTER,
+} from "@/components/shared";
 
 const pulseAnimation = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(183, 134, 40, 0.4); }
@@ -55,12 +60,11 @@ export const BgmAudioPlayer: React.FC<IBgmAudioPlayerProps> = ({ config }) => {
   return (
     <Box
       sx={{
+        ...STACK_ROW_ALIGN_JUST_CENTER,
         position: "fixed",
         bottom: 24,
         right: 24,
         zIndex: 9998,
-        display: "flex",
-        alignItems: "center",
         gap: 1.5,
         backgroundColor: "rgba(255, 255, 255, 0.95)",
         backdropFilter: "blur(12px)",
@@ -103,14 +107,19 @@ export const BgmAudioPlayer: React.FC<IBgmAudioPlayerProps> = ({ config }) => {
       <Box
         onClick={togglePlay}
         sx={{
-          display: "flex",
-          alignItems: "center",
+          ...STACK_ROW_ALIGN_JUST_CENTER,
           gap: 0.5,
           cursor: "pointer",
           userSelect: "none",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-end", gap: "2px", height: 16 }}>
+        <StackRowAlignJustCenter
+          sx={{
+            alignItems: "flex-end",
+            gap: "2px",
+            height: 16,
+          }}
+        >
           {[0.2, 0.4, 0.1, 0.5].map((delay, idx) => (
             <Box
               key={idx}
@@ -124,7 +133,7 @@ export const BgmAudioPlayer: React.FC<IBgmAudioPlayerProps> = ({ config }) => {
               }}
             />
           ))}
-        </Box>
+        </StackRowAlignJustCenter>
         <TextElement
           size="xs"
           weight="medium"

@@ -3,12 +3,13 @@
 import React from "react";
 import { Box, Container, Grid, Paper, Chip, Rating, Avatar } from "@mui/material";
 import { ITestimonialsBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
   StackColAlignJustCenter,
   StackRowAlignJustCenter,
+  StackCol,
   STACK_COL_ALIGN_JUST_BETWEEN,
 } from "@/components/shared";
 
@@ -35,7 +36,8 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
               sx={{
                 backgroundColor: "rgba(183, 134, 40, 0.1)",
                 color: COLOR.textGold,
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.semibold,
+                fontSize: FONT_SIZE.xs,
                 mb: 1,
               }}
             />
@@ -57,7 +59,7 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
                   ...STACK_COL_ALIGN_JUST_BETWEEN,
                   p: 3.5,
                   height: "100%",
-                  borderRadius: RADIUS.lg,
+                  borderRadius: RADIUS.md,
                   border: `1px solid ${COLOR.borderSecondary}`,
                   backgroundColor: COLOR.bgSecondary,
                   transition: "all 0.3s ease",
@@ -69,27 +71,27 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
                   },
                 }}
               >
-                <Box>
+                <Box sx={{ width: "100%" }}>
                   <Rating value={item.rating} readOnly size="small" sx={{ color: COLOR.gold.main, mb: 2 }} />
                   <TextElement size="sm" colorVariant="primary" sx={{ fontStyle: "italic", lineHeight: 1.7, mb: 3 }}>
                     &ldquo;{item.comment}&rdquo;
                   </TextElement>
                 </Box>
 
-                <StackRowAlignJustCenter spacing={2} sx={{ pt: 2, borderTop: `1px solid ${COLOR.divider}` }}>
+                <StackRowAlignJustCenter spacing={2} sx={{ width: "100%", pt: 2, borderTop: `1px solid ${COLOR.divider}` }}>
                   <Avatar
                     src={item.avatar}
                     alt={item.coupleName}
                     sx={{ width: 44, height: 44, border: `2px solid ${COLOR.gold.light}` }}
                   />
-                  <Box>
+                  <StackCol spacing={0.25}>
                     <HeadingElement variant="h6" weight="bold">
                       {item.coupleName}
                     </HeadingElement>
                     <TextElement size="xs" colorVariant="secondary">
                       {item.event}
                     </TextElement>
-                  </Box>
+                  </StackCol>
                 </StackRowAlignJustCenter>
               </Paper>
             </Grid>

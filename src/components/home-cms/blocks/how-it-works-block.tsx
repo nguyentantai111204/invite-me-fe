@@ -4,13 +4,15 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip } from "@mui/material";
 import Link from "next/link";
 import { IHowItWorksBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
   ButtonElement,
   IconElement,
   StackColAlignJustCenter,
+  StackCenter,
+  STACK_COL_ALIGN_JUST_START,
 } from "@/components/shared";
 
 interface IHowItWorksBlockProps {
@@ -24,12 +26,14 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
       id="how-it-works"
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPaper,
-        py: { xs: 8, md: 12 },
+        py: { xs: 8, md: 13 },
         position: "relative",
+        overflow: "hidden",
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
-        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: 8 }}>
+        {/* Section Header */}
+        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: { xs: 6, md: 9 } }}>
           {data.badge && (
             <Chip
               label={data.badge}
@@ -37,7 +41,8 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
               sx={{
                 backgroundColor: "rgba(183, 134, 40, 0.1)",
                 color: COLOR.textGold,
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.semibold,
+                fontSize: FONT_SIZE.xs,
                 mb: 1,
               }}
             />
@@ -45,102 +50,116 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
           <HeadingElement variant="h2" weight="bold">
             {data.title}
           </HeadingElement>
-          <TextElement size="md" colorVariant="secondary" sx={{ maxWidth: 600 }}>
+          <TextElement size="md" colorVariant="secondary" sx={{ maxWidth: 620 }}>
             {data.subtitle}
           </TextElement>
         </StackColAlignJustCenter>
 
-        <Box sx={{ position: "relative" }}>
-          {/* Subtle Golden Connector Line on Desktop */}
+        {/* Horizontal Zig-Zag Staggered Flow */}
+        <Box sx={{ position: "relative", pt: { md: 2 }, pb: { md: 3 } }}>
+          {/* Subtle Undulating Connector Line on Desktop */}
           <Box
             sx={{
               display: { xs: "none", md: "block" },
               position: "absolute",
-              top: 48,
-              left: "12%",
-              right: "12%",
+              top: "42%",
+              left: "10%",
+              right: "10%",
               height: 2,
-              background: `linear-gradient(90deg, transparent 0%, ${COLOR.borderGold} 20%, ${COLOR.borderGold} 80%, transparent 100%)`,
+              background: `linear-gradient(90deg, transparent 0%, ${COLOR.borderGold} 15%, ${COLOR.borderGold} 85%, transparent 100%)`,
               zIndex: 0,
             }}
           />
 
-          <Grid container spacing={4} sx={{ position: "relative", zIndex: 1 }}>
-            {data.steps.map((step, idx) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={idx}>
-                <Paper
-                  elevation={1}
+          <Grid container spacing={3.5} sx={{ position: "relative", zIndex: 1, alignItems: "stretch" }}>
+            {data.steps.map((step, idx) => {
+              // Zig-zag offset: Bước 1 & 3 nâng nhẹ lên (-16px), Bước 2 & 4 hạ nhẹ xuống (+18px)
+              const isOffsetDown = idx % 2 === 1;
+
+              return (
+                <Grid
+                  size={{ xs: 12, sm: 6, md: 3 }}
+                  key={idx}
                   sx={{
-                    p: 3.5,
-                    height: "100%",
-                    borderRadius: RADIUS.md,
-                    border: `1px solid ${COLOR.borderSecondary}`,
-                    textAlign: "center",
-                    backgroundColor: COLOR.bgSecondary,
                     display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-6px)",
-                      boxShadow: "0 12px 24px rgba(183, 134, 40, 0.12)",
-                      borderColor: COLOR.borderGold,
-                      backgroundColor: COLOR.bgPaper,
+                    transform: {
+                      xs: "none",
+                      md: isOffsetDown ? "translateY(20px)" : "translateY(-16px)",
                     },
+                    transition: "transform 0.4s ease",
                   }}
                 >
-                  {/* Step Number Circle */}
-                  <Box
+                  <Paper
+                    elevation={2}
                     sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: RADIUS.full,
-                      background: COLOR.btnGradient,
-                      color: COLOR.textInverse,
-                      display: "flex",
+                      ...STACK_COL_ALIGN_JUST_START,
+                      p: 3.5,
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: RADIUS.lg,
+                      border: `1.5px solid ${COLOR.borderGoldLight}`,
+                      textAlign: "center",
                       alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                      mb: 2.5,
-                      boxShadow: SHADOW.sm,
-                      border: "3px solid #FFFFFF",
+                      backgroundColor: COLOR.bgPaper,
+                      position: "relative",
+                      transition: "all 0.35s ease",
+                      "&:hover": {
+                        transform: "translateY(-8px)",
+                        boxShadow: "0 18px 36px rgba(183, 134, 40, 0.15)",
+                        borderColor: COLOR.gold.main,
+                      },
                     }}
                   >
-                    {step.stepNumber}
-                  </Box>
+                    {/* Step Number Badge */}
+                    <StackCenter
+                      sx={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: RADIUS.full,
+                        background: COLOR.btnGradient,
+                        color: COLOR.textInverse,
+                        fontWeight: FONT_WEIGHT.extrabold,
+                        fontSize: FONT_SIZE.md,
+                        mb: 2.5,
+                        boxShadow: SHADOW.md,
+                        border: "3px solid #FFFFFF",
+                      }}
+                    >
+                      {step.stepNumber}
+                    </StackCenter>
 
-                  <Box
-                    sx={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: RADIUS.md,
-                      backgroundColor: "rgba(183, 134, 40, 0.08)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: COLOR.textGold,
-                      mb: 2,
-                    }}
-                  >
-                    <IconElement name={step.iconName} size="md" />
-                  </Box>
+                    {/* Step Icon Container */}
+                    <StackCenter
+                      sx={{
+                        width: 54,
+                        height: 54,
+                        borderRadius: RADIUS.md,
+                        backgroundColor: "rgba(183, 134, 40, 0.08)",
+                        color: COLOR.textGold,
+                        mb: 2,
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <IconElement name={step.iconName} size="md" />
+                    </StackCenter>
 
-                  <HeadingElement variant="h5" weight="bold" sx={{ mb: 1, fontSize: "1.1rem" }}>
-                    {step.title}
-                  </HeadingElement>
+                    <HeadingElement variant="h5" weight="bold" sx={{ mb: 1, fontSize: "1.15rem" }}>
+                      {step.title}
+                    </HeadingElement>
 
-                  <TextElement size="sm" colorVariant="secondary" sx={{ lineHeight: 1.6 }}>
-                    {step.description}
-                  </TextElement>
-                </Paper>
-              </Grid>
-            ))}
+                    <TextElement size="sm" colorVariant="secondary" sx={{ lineHeight: 1.65 }}>
+                      {step.description}
+                    </TextElement>
+                  </Paper>
+                </Grid>
+              );
+            })}
           </Grid>
         </Box>
 
+        {/* Bottom CTA Button */}
         {data.ctaButton?.show && (
-          <Box sx={{ textAlign: "center", mt: 7 }}>
+          <Box sx={{ textAlign: "center", mt: { xs: 6, md: 8 } }}>
             <ButtonElement
               component={Link}
               href={data.ctaButton.link}
@@ -152,7 +171,7 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
                   <IconElement name={data.ctaButton.iconName} size="sm" />
                 ) : undefined
               }
-              sx={{ px: 4, py: 1.5, fontSize: "1rem" }}
+              sx={{ px: 4, py: 1.5 }}
             >
               {data.ctaButton.text}
             </ButtonElement>
