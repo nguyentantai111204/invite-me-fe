@@ -57,7 +57,7 @@ export const theme = createTheme({
     divider: COLOR.divider,
   },
   shape: {
-    borderRadius: RADIUS.md,
+    borderRadius: 8,
   },
   typography: {
     fontFamily: FONT_FAMILY.sans,

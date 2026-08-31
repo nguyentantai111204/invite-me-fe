@@ -5,6 +5,13 @@ import { AppThemeProvider } from "@/components/shared/theme-provider";
 import { ReduxProvider } from "@/store/provider";
 import { siteConfig } from "@/config/site.config";
 import { OrganizationJsonLd, WebApplicationJsonLd } from "@/components/shared/seo/json-ld";
+import {
+  fontSans,
+  fontPlayfair,
+  fontCormorant,
+  fontGreatVibes,
+  fontBeVietnamPro,
+} from "@/config/fonts.config";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -66,7 +73,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
+    <html
+      lang="vi"
+      className={`${fontSans.variable} ${fontPlayfair.variable} ${fontCormorant.variable} ${fontGreatVibes.variable} ${fontBeVietnamPro.variable}`}
+    >
       <head>
         <OrganizationJsonLd />
         <WebApplicationJsonLd />
