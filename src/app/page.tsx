@@ -1,9 +1,15 @@
 "use client";
 
 import React from "react";
-import { Container, Button } from "@mui/material";
+import { Container } from "@mui/material";
 import Link from "next/link";
-import { StackColAlignJustCenter, HeadingElement, TextElement } from "@/components/shared";
+import {
+  StackColAlignJustCenter,
+  HeadingElement,
+  TextElement,
+  ButtonElement,
+  IconElement,
+} from "@/components/shared";
 
 export default function HomePage() {
   return (
@@ -15,14 +21,16 @@ export default function HomePage() {
         <TextElement colorVariant="secondary" align="center" sx={{ maxWidth: 600 }}>
           Nền tảng thiết kế và chỉnh sửa thiệp mời điện tử trực quan, hiện đại và chuẩn hóa.
         </TextElement>
-        <Button
+        <ButtonElement
           component={Link}
           href="/editor/demo-card"
-          variant="contained"
+          variant="gradient"
           size="large"
+          rounded="md"
+          leftIcon={<IconElement name="AutoAwesome" size="sm" />}
         >
           Mở Editor Thiết Kế
-        </Button>
+        </ButtonElement>
       </StackColAlignJustCenter>
     </Container>
   );
