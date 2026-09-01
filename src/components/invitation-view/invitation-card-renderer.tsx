@@ -262,7 +262,7 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
             <Box sx={{ p: { xs: 4, md: 6 }, borderBottom: `1px solid ${COLOR.divider}` }}>
               <Grid container spacing={4} sx={{ alignItems: "center" }}>
                 {/* Groom */}
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12 }}>
                   <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center" }}>
                     <Box
                       component="img"
@@ -296,8 +296,17 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
                   </StackColAlignJustCenter>
                 </Grid>
 
+                {/* Romantic Heart Divider */}
+                <Grid size={{ xs: 12 }}>
+                  <StackRowAlignJustCenter spacing={1.5} sx={{ my: 0.5 }}>
+                    <Box sx={{ flex: 1, height: "1px", backgroundColor: COLOR.borderGoldLight }} />
+                    <Box sx={{ color: COLOR.rose.main, fontSize: "1.1rem" }}>❤️</Box>
+                    <Box sx={{ flex: 1, height: "1px", backgroundColor: COLOR.borderGoldLight }} />
+                  </StackRowAlignJustCenter>
+                </Grid>
+
                 {/* Bride */}
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12 }}>
                   <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center" }}>
                     <Box
                       component="img"
@@ -348,7 +357,7 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
 
               <Grid container spacing={2.5}>
                 {scheduleData.map((item, idx) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={idx}>
+                  <Grid size={{ xs: 12 }} key={idx}>
                     <Paper
                       elevation={1}
                       sx={{
@@ -441,7 +450,7 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
 
               <Grid container spacing={2}>
                 {galleryData.map((imgUrl, idx) => (
-                  <Grid size={{ xs: 6, sm: 4 }} key={idx}>
+                  <Grid size={{ xs: 6 }} key={idx}>
                     <Box
                       component="img"
                       src={imgUrl}
@@ -449,11 +458,12 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
                       onClick={() => setSelectedPhoto(imgUrl)}
                       sx={{
                         width: "100%",
-                        height: { xs: 140, sm: 180 },
+                        height: 140,
                         objectFit: "cover",
                         borderRadius: RADIUS.md,
                         border: `1px solid ${COLOR.borderGoldLight}`,
                         cursor: "pointer",
+                        boxShadow: SHADOW.sm,
                         transition: "all 0.3s ease",
                         "&:hover": {
                           transform: "scale(1.03)",
@@ -484,7 +494,7 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
 
               <Grid container spacing={3}>
                 {bankAccountsData.map((acc) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={acc.id}>
+                  <Grid size={{ xs: 12 }} key={acc.id}>
                     <Paper
                       elevation={2}
                       sx={{

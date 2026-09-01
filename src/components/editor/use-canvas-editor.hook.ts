@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   ICanvasDocument,
   ICanvasLayer,
@@ -11,14 +11,32 @@ import {
 } from "@/interfaces/canvas-editor.interface";
 import { INITIAL_WEDDING_CANVAS } from "./preset-canvas-data";
 
-export const useCanvasEditor = (initialDoc?: ICanvasDocument) => {
-  const [document, setDocument] = useState<ICanvasDocument>(initialDoc || INITIAL_WEDDING_CANVAS);
+export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) => {
+  const [document, setDocument] = useState<ICanvasDocument>(() => {
+    if (typeof window !== "undefined" && cardId) {
+      const saved = localStorage.getItem(`inviteme_canvas_${cardId}`);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return initialDoc || INITIAL_WEDDING_CANVAS;
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1);
 
   // History stack for Undo / Redo
-  const [history, setHistory] = useState<ICanvasDocument[]>([initialDoc || INITIAL_WEDDING_CANVAS]);
+  const [history, setHistory] = useState<ICanvasDocument[]>([document]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  // Auto-save to localStorage whenever document changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && (cardId || document.id)) {
+      const storageKey = `inviteme_canvas_${cardId || document.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(document));
+    }
+  }, [document, cardId]);
 
   const pushHistory = useCallback((newDoc: ICanvasDocument) => {
     setHistory((prev) => {
@@ -264,6 +282,22 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument) => {
     });
   }, [pushHistory]);
 
+  const setOpeningEffect = useCallback((effect: any) => {
+    setDocument((prev) => {
+      const newDoc = { ...prev, openingEffect: effect };
+      pushHistory(newDoc);
+      return newDoc;
+    });
+  }, [pushHistory]);
+
+  const setAmbientParticle = useCallback((particle: any) => {
+    setDocument((prev) => {
+      const newDoc = { ...prev, ambientParticle: particle };
+      pushHistory(newDoc);
+      return newDoc;
+    });
+  }, [pushHistory]);
+
   const expandCanvasHeight = useCallback((delta = 300) => {
     setDocument((prev) => {
       const newHeight = Math.max(780, prev.height + delta);
@@ -318,6 +352,8 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument) => {
     bringForward,
     sendBackward,
     setBackgroundColor,
+    setOpeningEffect,
+    setAmbientParticle,
     expandCanvasHeight,
     undo,
     redo,

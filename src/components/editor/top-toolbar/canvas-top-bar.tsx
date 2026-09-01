@@ -3,12 +3,13 @@
 import React from "react";
 import { Box, IconButton, Tooltip, Select, MenuItem } from "@mui/material";
 import Link from "next/link";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, SHADOW, FONT_SIZE, FONT_WEIGHT } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
   ButtonElement,
   IconElement,
+  StackCol,
   StackRowAlignJustCenter,
   StackRowAlignJustBetween,
 } from "@/components/shared";
@@ -39,38 +40,47 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
   onAddLength,
 }) => {
   return (
-    <Box
+    // StackRowAlignJustBetween = display:flex, alignItems:center, justifyContent:space-between
+    <StackRowAlignJustBetween
       sx={{
         height: 60,
-        backgroundColor: "#FFFFFF",
-        borderBottom: `1px solid #ECE7DD`,
-        px: 2.5,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: COLOR.bgPaper,
+        borderBottom: `1px solid ${COLOR.borderGoldLight}`,
+        px: 2.5,       // 20px — closest 4px-grid value to a standard topbar gutter
         boxShadow: SHADOW.sm,
         zIndex: 100,
+        flexShrink: 0,
       }}
     >
       {/* Left: Back & Title */}
       <StackRowAlignJustCenter spacing={2}>
         <Tooltip title="Quay về trang chủ">
-          <IconButton component={Link} href="/" size="small" sx={{ border: `1px solid ${COLOR.borderSecondary}` }}>
+          <IconButton
+            component={Link}
+            href="/"
+            size="small"
+            sx={{ border: `1px solid ${COLOR.borderSecondary}` }}
+          >
             <IconElement name="ArrowBack" size="xs" />
           </IconButton>
         </Tooltip>
 
-        <Box>
-          <HeadingElement variant="h6" weight="bold" sx={{ fontSize: "0.95rem", lineHeight: 1.2 }}>
+        {/* StackCol = display:flex, flexDirection:column, no hardcoded flex props */}
+        <StackCol spacing={0}>
+          <HeadingElement
+            variant="h6"
+            weight="bold"
+            sx={{ fontSize: FONT_SIZE.sm, lineHeight: 1.2 }}
+          >
             {title || "Thiệp Cưới Hoàng Kim Minh Quân & Thanh Trúc"}
           </HeadingElement>
           <TextElement size="xs" colorVariant="secondary">
-            Cố định chuẩn Mobile 390px • Auto-save
+            Cố định chuẩn Mobile 390px • Tự động lưu
           </TextElement>
-        </Box>
+        </StackCol>
       </StackRowAlignJustCenter>
 
-      {/* Center: Undo/Redo & Zoom & Add Length */}
+      {/* Center: Undo / Redo / Zoom / Expand */}
       <StackRowAlignJustCenter spacing={1}>
         <Tooltip title="Hoàn tác (Ctrl+Z)">
           <span>
@@ -88,14 +98,20 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
           </span>
         </Tooltip>
 
-        <Box sx={{ width: "1px", height: 20, backgroundColor: COLOR.divider, mx: 1 }} />
+        {/* Vertical Divider — 1px × 20px, not a spacing shorthand */}
+        <Box sx={{ width: 1, height: 20, backgroundColor: COLOR.divider }} />
 
         {/* Zoom Selector */}
         <Select
           size="small"
           value={scale}
           onChange={(e) => onScaleChange(Number(e.target.value))}
-          sx={{ height: 32, fontSize: "0.8rem", width: 85, backgroundColor: "#FFFFFF" }}
+          sx={{
+            height: 32,
+            width: 80,
+            fontSize: FONT_SIZE.xs,
+            backgroundColor: COLOR.bgPaper,
+          }}
         >
           <MenuItem value={0.75}>75%</MenuItem>
           <MenuItem value={0.85}>85%</MenuItem>
@@ -110,9 +126,15 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
             rounded="md"
             onClick={onAddLength}
             leftIcon={<IconElement name="Add" size="xs" />}
-            sx={{ height: 32, ml: 1, backgroundColor: "#FFFFFF", borderColor: "#E5E7EB", textTransform: "none", fontSize: "0.8rem" }}
+            sx={{
+              height: 32,
+              backgroundColor: COLOR.bgPaper,
+              borderColor: COLOR.borderSubtle,
+              fontSize: FONT_SIZE.xs,
+              fontWeight: FONT_WEIGHT.semibold,
+            }}
           >
-            + Add length
+            Mở Rộng Thiệp
           </ButtonElement>
         )}
       </StackRowAlignJustCenter>
@@ -127,7 +149,7 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
           size="small"
           rounded="md"
           leftIcon={<IconElement name="Visibility" size="xs" />}
-          sx={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
+          sx={{ backgroundColor: COLOR.bgPaper, borderColor: COLOR.borderSubtle }}
         >
           Xem Thử Mobile
         </ButtonElement>
@@ -142,6 +164,6 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
           Xuất Bản Thiệp
         </ButtonElement>
       </StackRowAlignJustCenter>
-    </Box>
+    </StackRowAlignJustBetween>
   );
 };

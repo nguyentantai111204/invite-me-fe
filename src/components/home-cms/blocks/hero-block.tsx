@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip } from "@mui/material";
 import Link from "next/link";
 import { IHeroBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, ANIMATION, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -26,7 +26,7 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
       id="hero"
       sx={{
         background: styles?.bgGradient || `radial-gradient(ellipse at 50% 20%, rgba(212, 175, 55, 0.12) 0%, ${COLOR.bgPrimary} 70%)`,
-        py: { xs: 8, md: 11 },
+        py: { xs: SPACING.px64, md: SPACING.px80 },
         position: "relative",
         overflow: "hidden",
       }}
@@ -40,13 +40,13 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                   icon={<IconElement name="AutoAwesome" size="xs" color={COLOR.textGold} />}
                   label={data.badgeText}
                   sx={{
-                    backgroundColor: "rgba(183, 134, 40, 0.1)",
+                    backgroundColor: `${COLOR.gold.main}1A`,
                     border: `1px solid ${COLOR.borderGold}`,
                     color: COLOR.textGold,
                     fontWeight: FONT_WEIGHT.semibold,
                     fontSize: FONT_SIZE.xs,
-                    mb: 3,
-                    px: 1,
+                    mb: SPACING.px24,
+                    px: SPACING.px8,
                   }}
                 />
               )}
@@ -89,12 +89,12 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
               </TextElement>
 
               <StackRowAlignJustCenter
-                spacing={2}
+                spacing={SPACING.px16}
                 sx={{
                   justifyContent: { xs: "center", md: "flex-start" },
                   flexWrap: "wrap",
-                  gap: 2,
-                  mb: 5,
+                  gap: SPACING.px16,
+                  mb: SPACING.px40,
                 }}
               >
                 {data.primaryButton?.show && (
@@ -164,10 +164,10 @@ export const HeroBlock: React.FC<IHeroBlockProps> = ({ data, styles }) => {
                   overflow: "hidden",
                   boxShadow: SHADOW.xl,
                   background: COLOR.bgPaper,
-                  transition: "all 0.3s ease",
+                  transition: ANIMATION.md,
                   "&:hover": {
                     transform: "translateY(-6px)",
-                    boxShadow: "0 20px 30px rgba(183, 134, 40, 0.18)",
+                    boxShadow: `0 20px 30px ${COLOR.gold.main}2E`,
                   },
                 }}
               >

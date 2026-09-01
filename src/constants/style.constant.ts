@@ -1,3 +1,26 @@
+export const SPACING = {
+  px2:   0.25,   // 2px
+  px4:   0.5,    // 4px
+  px6:   0.75,   // 6px
+  px8:   1,      // 8px
+  px12:  1.5,    // 12px
+  px16:  2,      // 16px
+  px20:  2.5,    // 20px
+  px24:  3,      // 24px
+  px28:  3.5,    // 28px
+  px32:  4,      // 32px
+  px36:  4.5,    // 36px
+  px40:  5,      // 40px
+  px48:  6,      // 48px
+  px56:  7,      // 56px
+  px64:  8,      // 64px
+  px80:  10,     // 80px
+  px96:  12,     // 96px
+  px104: 13,     // 104px (section py xs)
+  px128: 16,     // 128px
+} as const;
+
+/** @deprecated Use SPACING instead */
 export const PADDING_GAP_ITEM = {
   xs: 2,
   sm: 4,

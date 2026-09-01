@@ -3,7 +3,7 @@
 import React from "react";
 import { Box, Container, Grid, Paper, Chip, Rating, Avatar } from "@mui/material";
 import { ITestimonialsBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, ANIMATION, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -24,21 +24,21 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
       id="testimonials"
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPaper,
-        py: { xs: 8, md: 12 },
+        py: { xs: SPACING.px64, md: SPACING.px96 },
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
-        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: 8 }}>
+        <StackColAlignJustCenter spacing={SPACING.px12} sx={{ textAlign: "center", mb: SPACING.px64 }}>
           {data.badge && (
             <Chip
               label={data.badge}
               size="small"
               sx={{
-                backgroundColor: "rgba(183, 134, 40, 0.1)",
+                backgroundColor: `${COLOR.gold.main}1A`,
                 color: COLOR.textGold,
                 fontWeight: FONT_WEIGHT.semibold,
                 fontSize: FONT_SIZE.xs,
-                mb: 1,
+                mb: SPACING.px8,
               }}
             />
           )}
@@ -50,19 +50,19 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
           </TextElement>
         </StackColAlignJustCenter>
 
-        <Grid container spacing={3.5}>
+        <Grid container spacing={SPACING.px28}>
           {data.testimonials.map((item) => (
             <Grid size={{ xs: 12, md: 4 }} key={item.id}>
               <Paper
                 elevation={1}
                 sx={{
                   ...STACK_COL_ALIGN_JUST_BETWEEN,
-                  p: 3.5,
+                  p: SPACING.px28,
                   height: "100%",
                   borderRadius: RADIUS.md,
                   border: `1px solid ${COLOR.borderSecondary}`,
                   backgroundColor: COLOR.bgSecondary,
-                  transition: "all 0.3s ease",
+                  transition: ANIMATION.md,
                   "&:hover": {
                     transform: "translateY(-4px)",
                     boxShadow: SHADOW.md,
@@ -72,13 +72,13 @@ export const TestimonialsBlock: React.FC<ITestimonialsBlockProps> = ({ data, sty
                 }}
               >
                 <Box sx={{ width: "100%" }}>
-                  <Rating value={item.rating} readOnly size="small" sx={{ color: COLOR.gold.main, mb: 2 }} />
-                  <TextElement size="sm" colorVariant="primary" sx={{ fontStyle: "italic", lineHeight: 1.7, mb: 3 }}>
+                  <Rating value={item.rating} readOnly size="small" sx={{ color: COLOR.gold.main, mb: SPACING.px16 }} />
+                  <TextElement size="sm" colorVariant="primary" sx={{ fontStyle: "italic", lineHeight: 1.7, mb: SPACING.px24 }}>
                     &ldquo;{item.comment}&rdquo;
                   </TextElement>
                 </Box>
 
-                <StackRowAlignJustCenter spacing={2} sx={{ width: "100%", pt: 2, borderTop: `1px solid ${COLOR.divider}` }}>
+                <StackRowAlignJustCenter spacing={SPACING.px16} sx={{ width: "100%", pt: SPACING.px16, borderTop: `1px solid ${COLOR.divider}` }}>
                   <Avatar
                     src={item.avatar}
                     alt={item.coupleName}

@@ -15,7 +15,8 @@ import {
   Tooltip,
 } from "@mui/material";
 import { ICanvasLayer, ICanvasTextLayer, ICanvasImageLayer, ICanvasShapeLayer } from "@/interfaces/canvas-editor.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_SIZE, FONT_WEIGHT, SPACING, ANIMATION } from "@/constants/style.constant";
+import { CARD_ITEM_SX, SELECTABLE_ITEM_SX, PANEL_RAIL_SX, PANEL_CONTENT_SX } from "../editor.styles";
 import {
   HeadingElement,
   TextElement,
@@ -94,43 +95,28 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
   const txtLayer = isText ? (selectedLayer as ICanvasTextLayer) : null;
 
   return (
-    <Box sx={{ display: "flex", height: "100%", backgroundColor: "#FFFFFF", zIndex: 20 }}>
+    <Box sx={{ display: "flex", height: "100%", backgroundColor: COLOR.bgPaper, zIndex: 20 }}>
       {/* Tier 1: Slim Vertical Icon Rail */}
-      <Box
-        sx={{
-          width: 72,
-          height: "100%",
-          backgroundColor: "#FAF8F5",
-          borderRight: "1px solid #ECE7DD",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          py: 2,
-          gap: 1,
-        }}
-      >
+      <Box sx={{ ...PANEL_RAIL_SX, width: 72 }}>
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
-            <Box
+            <StackCenter
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               sx={{
                 width: 60,
                 height: 60,
-                borderRadius: RADIUS.md,
-                display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                borderRadius: RADIUS.md,
                 cursor: "pointer",
-                backgroundColor: isActive ? "#FFFFFF" : item.highlight ? "#FFF5E3" : "transparent",
-                color: isActive ? COLOR.gold.main : item.highlight ? "#B78628" : "#6D645A",
-                boxShadow: isActive ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
-                border: isActive ? "1.5px solid #C59B4B" : item.highlight ? "1px dashed #C59B4B" : "1px solid transparent",
-                transition: "all 0.2s ease",
+                backgroundColor: isActive ? COLOR.bgPaper : item.highlight ? `${COLOR.gold.main}1A` : "transparent",
+                color: isActive ? COLOR.gold.main : item.highlight ? COLOR.gold.main : COLOR.textTertiary,
+                boxShadow: isActive ? SHADOW.sm : "none",
+                border: isActive ? `1.5px solid ${COLOR.gold.light}` : item.highlight ? `1px dashed ${COLOR.gold.light}` : "1px solid transparent",
+                transition: ANIMATION.sm,
                 "&:hover": {
-                  backgroundColor: isActive ? "#FFFFFF" : "#F4EFE6",
+                  backgroundColor: isActive ? COLOR.bgPaper : COLOR.bgTertiary,
                   color: COLOR.gold.main,
                 },
               }}
@@ -139,30 +125,21 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
               <TextElement
                 size="xs"
                 weight={isActive ? "bold" : "medium"}
-                sx={{
-                  fontSize: "0.68rem",
-                  mt: 0.5,
-                  color: "inherit",
-                }}
+                sx={{ fontSize: FONT_SIZE.xs, mt: SPACING.px4, color: "inherit" }}
               >
                 {item.label}
               </TextElement>
-            </Box>
+            </StackCenter>
           );
         })}
       </Box>
 
-      {/* Tier 2: Wide Content & Properties Panel */}
+      {/* ── Tier 2: Wide Content & Properties Panel ── */}
       <Box
         sx={{
+          ...PANEL_CONTENT_SX,
           width: { xs: 270, sm: 320 },
-          height: "100%",
-          backgroundColor: "#FFFFFF",
-          borderRight: "1px solid #ECE7DD",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-          p: 2.5,
+          p: SPACING.px20,
         }}
       >
         {/* Tab 0: Thuộc Tính (Properties Panel on Left) */}
@@ -179,7 +156,14 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
               </Tooltip>
             </StackRowAlignJustBetween>
 
-            <Box sx={{ p: 1.5, backgroundColor: "#FAF9F6", borderRadius: RADIUS.md, border: "1px solid #ECE7DD" }}>
+            <Box
+                sx={{
+                  p: SPACING.px12,
+                  backgroundColor: COLOR.bgSecondary,
+                  borderRadius: RADIUS.md,
+                  border: `1px solid ${COLOR.borderGoldLight}`,
+                }}
+              >
               <TextElement size="xs" colorVariant="secondary">
                 Đang chọn:
               </TextElement>
@@ -200,7 +184,7 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
                     size="small"
                     value={txtLayer.fontFamily || "'Playfair Display', serif"}
                     onChange={(e) => onUpdateLayer(txtLayer.id, { fontFamily: e.target.value })}
-                    sx={{ fontSize: "0.85rem" }}
+                    sx={{ fontSize: FONT_SIZE.sm }}
                   >
                     <MenuItem value="'Playfair Display', serif">Playfair Display (Serif Quý Tộc)</MenuItem>
                     <MenuItem value="Inter, sans-serif">Inter (Hiện Đại Sang Trọng)</MenuItem>
@@ -218,7 +202,7 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
                       size="small"
                       value={txtLayer.fontSize || 18}
                       onChange={(e) => onUpdateLayer(txtLayer.id, { fontSize: Number(e.target.value) })}
-                      sx={{ width: 120, fontSize: "0.85rem" }}
+                      sx={{ width: 120, fontSize: FONT_SIZE.sm }}
                     >
                       {[11, 12, 13, 14, 16, 18, 20, 24, 28, 30, 32, 36, 42, 48].map((size) => (
                         <MenuItem key={size} value={size}>
@@ -297,13 +281,13 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
                           sx={{
                             p: 1,
                             borderRadius: RADIUS.md,
-                            border: `2px solid ${txtLayer.fill === c.color ? COLOR.gold.main : "#ECE7DD"}`,
-                            backgroundColor: "#FAF9F6",
+                            border: `2px solid ${txtLayer.fill === c.color ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                            backgroundColor: COLOR.bgSecondary,
                             cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
-                            gap: 1,
-                            transition: "all 0.2s ease",
+                            gap: SPACING.px8,
+                            transition: ANIMATION.sm,
                           }}
                         >
                           <Box sx={{ width: 16, height: 16, borderRadius: RADIUS.full, backgroundColor: c.color, border: "1px solid #D5D5D5" }} />
@@ -358,7 +342,7 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
               color="error"
               onClick={() => onDeleteLayer(selectedLayer.id)}
               leftIcon={<IconElement name="Delete" size="xs" />}
-              sx={{ borderColor: "#E57373", color: "#D32F2F" }}
+              sx={{ borderColor: COLOR.status.error.main, color: COLOR.status.error.main }}
             >
               Xóa Đối Tượng Này
             </ButtonElement>
@@ -716,26 +700,26 @@ export const CanvasSidebar: React.FC<ICanvasSidebarProps> = ({
               { name: "Nhung Đỏ Cổ Điển", color: "#3B1117", border: "#8B1E2B" },
               { name: "Đêm Gala Tinh Tú", color: "#161B26", border: "#3A4D6B" },
               { name: "Xanh Rêu Vintage", color: "#F5F8F5", border: "#6B8E6B" },
-            ].map((bg, idx) => (
+            ].map((bg, idx) => ( 
               <Paper
                 key={idx}
                 elevation={0}
                 onClick={() => onSetBackground(bg.color)}
                 sx={{
-                  p: 1.5,
+                  p: SPACING.px12,
                   cursor: "pointer",
                   borderRadius: RADIUS.md,
                   border: `2px solid ${bg.border}`,
                   backgroundColor: bg.color,
                   display: "flex",
                   alignItems: "center",
-                  gap: 2,
-                  transition: "transform 0.2s ease",
+                  gap: SPACING.px16,
+                  transition: ANIMATION.sm,
                   "&:hover": { transform: "scale(1.02)", boxShadow: SHADOW.sm },
                 }}
               >
                 <Box sx={{ width: 28, height: 28, borderRadius: RADIUS.full, backgroundColor: bg.border }} />
-                <TextElement size="sm" weight="bold" sx={{ color: bg.color === "#3B1117" || bg.color === "#161B26" ? "#FFFFFF" : "#2A231C" }}>
+                <TextElement size="sm" weight="bold" sx={{ color: bg.color === "#3B1117" || bg.color === "#161B26" ? COLOR.textInverse : COLOR.textPrimary }}>
                   {bg.name}
                 </TextElement>
               </Paper>

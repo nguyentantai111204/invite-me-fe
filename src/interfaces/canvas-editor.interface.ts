@@ -1,6 +1,27 @@
 export type CanvasLayerType = "text" | "image" | "sticker" | "shape";
 
-export interface ICanvasLayerBase {
+export type CanvasElementAnimationType =
+  | "none"
+  | "fade-in"
+  | "slide-up"
+  | "zoom-in"
+  | "bounce"
+  | "shimmer";
+
+export type CanvasOpeningEffectType =
+  | "envelope-3d"
+  | "gate-fold"
+  | "scroll"
+  | "fade";
+
+export type CanvasAmbientParticleType =
+  | "none"
+  | "sakura"
+  | "gold-dust"
+  | "hearts"
+  | "snow";
+
+export interface ICanvasBaseLayer {
   id: string;
   type: CanvasLayerType;
   name: string;
@@ -8,46 +29,48 @@ export interface ICanvasLayerBase {
   y: number;
   width?: number;
   height?: number;
-  rotation: number;
-  scaleX: number;
-  scaleY: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
   zIndex: number;
-  isLocked: boolean;
-  isHidden: boolean;
+  isLocked?: boolean;
+  isHidden?: boolean;
   opacity?: number;
+  // Element animation
+  animation?: CanvasElementAnimationType;
+  animationDelay?: number;
 }
 
-export interface ICanvasTextLayer extends ICanvasLayerBase {
+export interface ICanvasTextLayer extends ICanvasBaseLayer {
   type: "text";
   text: string;
   fontSize: number;
   fontFamily: string;
-  fill: string;
-  textAlign: "left" | "center" | "right";
-  fontWeight?: "normal" | "bold" | "300" | "400" | "500" | "600" | "700" | "800";
+  fontWeight?: "normal" | "bold" | "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
   fontStyle?: "normal" | "italic";
-  letterSpacing?: number;
+  fill?: string;
+  textAlign?: "left" | "center" | "right" | "justify";
   lineHeight?: number;
+  letterSpacing?: number;
 }
 
-export interface ICanvasImageLayer extends ICanvasLayerBase {
+export interface ICanvasImageLayer extends ICanvasBaseLayer {
   type: "image";
   src: string;
   borderRadius?: number;
 }
 
-export interface ICanvasStickerLayer extends ICanvasLayerBase {
+export interface ICanvasStickerLayer extends ICanvasBaseLayer {
   type: "sticker";
-  stickerType: "emoji" | "svg" | "ornament";
-  content: string; // Emoji character or SVG path/url
+  stickerType: "emoji" | "vector";
+  content: string;
   fontSize?: number;
-  fill?: string;
 }
 
-export interface ICanvasShapeLayer extends ICanvasLayerBase {
+export interface ICanvasShapeLayer extends ICanvasBaseLayer {
   type: "shape";
-  shapeType: "rect" | "circle" | "line" | "divider";
-  fill: string;
+  shapeType: "rect" | "circle" | "divider";
+  fill?: string;
   stroke?: string;
   strokeWidth?: number;
   borderRadius?: number;
@@ -62,9 +85,12 @@ export type ICanvasLayer =
 export interface ICanvasDocument {
   id: string;
   title: string;
-  width: number; // Default 390
-  height: number; // Default 780
+  width: number;
+  height: number;
   backgroundColor: string;
-  backgroundImage?: string;
   layers: ICanvasLayer[];
+  // Invitation level effects
+  openingEffect?: CanvasOpeningEffectType;
+  ambientParticle?: CanvasAmbientParticleType;
+  bgMusicUrl?: string;
 }

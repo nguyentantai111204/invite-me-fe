@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Container, Paper } from "@mui/material";
 import Link from "next/link";
 import { ICtaBannerBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, ANIMATION, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -24,7 +24,7 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
     <Box
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPrimary,
-        py: { xs: 8, md: 12 },
+        py: { xs: SPACING.px64, md: SPACING.px96 },
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
@@ -34,7 +34,7 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
             background: COLOR.btnGradient,
             color: COLOR.textInverse,
             borderRadius: RADIUS.lg,
-            p: { xs: 5, md: 8 },
+            p: { xs: SPACING.px40, md: SPACING.px64 },
             textAlign: "center",
             boxShadow: SHADOW.xl,
             position: "relative",
@@ -54,7 +54,7 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
               {data.subtitle}
             </TextElement>
 
-            <StackRowAlignJustCenter spacing={2} sx={{ mt: 2, flexWrap: "wrap", gap: 2 }}>
+            <StackRowAlignJustCenter spacing={SPACING.px16} sx={{ mt: SPACING.px16, flexWrap: "wrap", gap: SPACING.px16 }}>
               {data.primaryButton?.show && (
                 <ButtonElement
                   component={Link}
@@ -82,10 +82,10 @@ export const CtaBannerBlock: React.FC<ICtaBannerBlockProps> = ({ data, styles })
                   rounded="md"
                   sx={{
                     borderColor: "rgba(255, 255, 255, 0.6)",
-                    color: "#FFFFFF",
+                    color: COLOR.textInverse,
                     "&:hover": {
                       backgroundColor: "rgba(255, 255, 255, 0.15)",
-                      borderColor: "#FFFFFF",
+                      borderColor: COLOR.textInverse,
                     },
                     px: 3.5,
                     py: 1.5,

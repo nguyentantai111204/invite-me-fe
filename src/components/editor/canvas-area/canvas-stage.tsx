@@ -202,27 +202,36 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
         backgroundColor: "#FFFFFF",
       }}
     >
-      {/* Floating Context Toolbar (Rendered above the selected element) */}
-      {selectedLayer && !editingTextId && (
-        <Paper
-          elevation={4}
-          sx={{
-            position: "absolute",
-            top: `${Math.max(10, (selectedLayer.y - 48) * scale)}px`,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            borderRadius: "9999px",
-            backgroundColor: "#FFFFFF",
-            border: "1px solid #ECE7DD",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-            display: "flex",
-            alignItems: "center",
-            p: 0.5,
-            px: 1,
-            gap: 0.5,
-          }}
-        >
+      {/* Floating Context Toolbar (Intelligently positioned above or below the selected layer) */}
+      {selectedLayer && !editingTextId && (() => {
+        const layerTop = selectedLayer.y * scale;
+        const layerHeight = ((selectedLayer as any).height || (selectedLayer as any).fontSize || 35) * scale;
+        const layerCenterX = ((selectedLayer.x + (selectedLayer.width || 200) / 2) * scale);
+        const toolbarTop = layerTop > 55 ? layerTop - 46 : layerTop + layerHeight + 12;
+        const toolbarLeft = Math.max(120, Math.min((document.width * scale) - 120, layerCenterX));
+
+        return (
+          <Paper
+            elevation={6}
+            sx={{
+              position: "absolute",
+              top: `${toolbarTop}px`,
+              left: `${toolbarLeft}px`,
+              transform: "translateX(-50%)",
+              zIndex: 1200,
+              borderRadius: "9999px",
+              backgroundColor: "rgba(255, 255, 255, 0.98)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid #ECE7DD",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+              display: "flex",
+              alignItems: "center",
+              p: 0.5,
+              px: 1.25,
+              gap: 0.5,
+              whiteSpace: "nowrap",
+            }}
+          >
           {selectedLayer.type === "text" && (
             <>
               <Tooltip title="In Đậm (Bold)">
@@ -302,7 +311,8 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
             </Tooltip>
           )}
         </Paper>
-      )}
+        );
+      })()}
 
       {/* Main Canvas Stage */}
       <Stage

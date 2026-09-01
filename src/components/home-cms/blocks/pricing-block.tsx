@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import Link from "next/link";
 import { IPricingBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, ANIMATION, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -26,21 +26,21 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
       id="pricing"
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPrimary,
-        py: { xs: 8, md: 12 },
+        py: { xs: SPACING.px64, md: SPACING.px96 },
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
-        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: 8 }}>
+        <StackColAlignJustCenter spacing={SPACING.px12} sx={{ textAlign: "center", mb: SPACING.px64 }}>
           {data.badge && (
             <Chip
               label={data.badge}
               size="small"
               sx={{
-                backgroundColor: "rgba(183, 134, 40, 0.1)",
+                backgroundColor: `${COLOR.gold.main}1A`,
                 color: COLOR.textGold,
                 fontWeight: FONT_WEIGHT.semibold,
                 fontSize: FONT_SIZE.xs,
-                mb: 1,
+                mb: SPACING.px8,
               }}
             />
           )}
@@ -59,7 +59,7 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
                 elevation={plan.isPopular ? 6 : 2}
                 sx={{
                   ...STACK_COL_ALIGN_JUST_BETWEEN,
-                  p: 4,
+                  p: SPACING.px32,
                   height: "100%",
                   borderRadius: RADIUS.lg,
                   border: plan.isPopular
@@ -67,7 +67,7 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
                     : `1px solid ${COLOR.borderGoldLight}`,
                   backgroundColor: COLOR.bgPaper,
                   position: "relative",
-                  transition: "all 0.3s ease",
+                  transition: ANIMATION.md,
                   transform: plan.isPopular ? { md: "scale(1.04)" } : "none",
                   "&:hover": {
                     boxShadow: SHADOW.lg,
@@ -104,14 +104,14 @@ export const PricingBlock: React.FC<IPricingBlockProps> = ({ data, styles }) => 
                     <HeadingElement variant="h2" weight="extrabold" gradient="gold">
                       {plan.price}
                     </HeadingElement>
-                    <TextElement size="sm" colorVariant="secondary" sx={{ ml: 1 }}>
+                    <TextElement size="sm" colorVariant="secondary" sx={{ ml: SPACING.px8 }}>
                       {plan.period}
                     </TextElement>
                   </StackRow>
 
-                  <List sx={{ mb: 4, py: 0 }}>
+                  <List sx={{ mb: SPACING.px32, py: 0 }}>
                     {plan.features.map((feat, fIdx) => (
-                      <ListItem key={fIdx} disableGutters sx={{ py: 0.8 }}>
+                      <ListItem key={fIdx} disableGutters sx={{ py: SPACING.px8 }}>
                         <ListItemIcon sx={{ minWidth: 28, color: feat.included ? COLOR.gold.main : COLOR.textDisabled }}>
                           <IconElement
                             name={feat.included ? "CheckCircle" : "Remove"}

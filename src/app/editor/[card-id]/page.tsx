@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, IconButton } from "@mui/material";
 import dynamic from "next/dynamic";
-import { useCanvasEditor } from "@/components/canvas-editor/use-canvas-editor.hook";
-import { CanvasTopBar } from "@/components/canvas-editor/canvas-top-bar";
-import { CanvasAssetsDrawer } from "@/components/canvas-editor/canvas-assets-drawer";
-import { CanvasPropertiesInspector } from "@/components/canvas-editor/canvas-properties-inspector";
+import { useCanvasEditor } from "@/components/editor/use-canvas-editor.hook";
+import { CanvasTopBar } from "@/components/editor/top-toolbar/canvas-top-bar";
+import { CanvasAssetsDrawer } from "@/components/editor/left-panel/canvas-assets-drawer";
+import { CanvasPropertiesInspector } from "@/components/editor/right-panel/canvas-properties-inspector";
 import {
   HeadingElement,
   TextElement,
@@ -16,7 +16,7 @@ import {
 } from "@/components/shared";
 
 const CanvasStage = dynamic(
-  () => import("@/components/canvas-editor/canvas-stage").then((mod) => mod.CanvasStage),
+  () => import("@/components/editor/canvas-area/canvas-stage").then((mod) => mod.CanvasStage),
   {
     ssr: false,
     loading: () => (
@@ -62,10 +62,12 @@ export default function EditorPage({ params }: EditorPageProps) {
     bringForward,
     sendBackward,
     setBackgroundColor,
+    setOpeningEffect,
+    setAmbientParticle,
     expandCanvasHeight,
     undo,
     redo,
-  } = useCanvasEditor();
+  } = useCanvasEditor(undefined, cardId);
 
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
@@ -96,8 +98,12 @@ export default function EditorPage({ params }: EditorPageProps) {
 
       {/* 2. Main Workspace: Left Assets Drawer + Center Stage + Right Properties Inspector */}
       <Box sx={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        {/* Left: Assets Drawer (Mẫu Chữ, Họa Tiết, Khung Hình, Tải Ảnh, Màu Nền) */}
+        {/* Left: Assets Drawer (Mẫu Chữ, Họa Tiết, Hiệu Ứng, Khung Hình, Tải Ảnh, Màu Nền) */}
         <CanvasAssetsDrawer
+          openingEffect={document.openingEffect}
+          ambientParticle={document.ambientParticle}
+          onSetOpeningEffect={setOpeningEffect}
+          onSetAmbientParticle={setAmbientParticle}
           onAddText={addTextLayer}
           onAddSticker={addStickerLayer}
           onAddShape={addShapeLayer}

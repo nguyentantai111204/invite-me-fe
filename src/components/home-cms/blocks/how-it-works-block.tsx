@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Container, Grid, Paper, Chip } from "@mui/material";
 import Link from "next/link";
 import { IHowItWorksBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, ANIMATION, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -26,24 +26,24 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
       id="how-it-works"
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPaper,
-        py: { xs: 8, md: 13 },
+        py: { xs: SPACING.px64, md: SPACING.px104 },
         position: "relative",
         overflow: "hidden",
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
         {/* Section Header */}
-        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: { xs: 6, md: 9 } }}>
+        <StackColAlignJustCenter spacing={SPACING.px12} sx={{ textAlign: "center", mb: { xs: SPACING.px48, md: SPACING.px80 } }}>
           {data.badge && (
             <Chip
               label={data.badge}
               size="small"
               sx={{
-                backgroundColor: "rgba(183, 134, 40, 0.1)",
+                backgroundColor: `${COLOR.gold.main}1A`,
                 color: COLOR.textGold,
                 fontWeight: FONT_WEIGHT.semibold,
                 fontSize: FONT_SIZE.xs,
-                mb: 1,
+                mb: SPACING.px8,
               }}
             />
           )}
@@ -93,7 +93,7 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
                     elevation={2}
                     sx={{
                       ...STACK_COL_ALIGN_JUST_START,
-                      p: 3.5,
+                      p: SPACING.px28,
                       width: "100%",
                       height: "100%",
                       borderRadius: RADIUS.lg,
@@ -102,10 +102,10 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
                       alignItems: "center",
                       backgroundColor: COLOR.bgPaper,
                       position: "relative",
-                      transition: "all 0.35s ease",
+                      transition: ANIMATION.md,
                       "&:hover": {
                         transform: "translateY(-8px)",
-                        boxShadow: "0 18px 36px rgba(183, 134, 40, 0.15)",
+                        boxShadow: `0 18px 36px ${COLOR.gold.main}26`,
                         borderColor: COLOR.gold.main,
                       },
                     }}
@@ -122,7 +122,7 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
                         fontSize: FONT_SIZE.md,
                         mb: 2.5,
                         boxShadow: SHADOW.md,
-                        border: "3px solid #FFFFFF",
+                        border: `3px solid ${COLOR.bgPaper}`,
                       }}
                     >
                       {step.stepNumber}
@@ -134,10 +134,10 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
                         width: 54,
                         height: 54,
                         borderRadius: RADIUS.md,
-                        backgroundColor: "rgba(183, 134, 40, 0.08)",
+                        backgroundColor: `${COLOR.gold.main}14`,
                         color: COLOR.textGold,
                         mb: 2,
-                        transition: "all 0.3s ease",
+                        transition: ANIMATION.md,
                       }}
                     >
                       <IconElement name={step.iconName} size="md" />
@@ -159,7 +159,7 @@ export const HowItWorksBlock: React.FC<IHowItWorksBlockProps> = ({ data, styles 
 
         {/* Bottom CTA Button */}
         {data.ctaButton?.show && (
-          <Box sx={{ textAlign: "center", mt: { xs: 6, md: 8 } }}>
+          <Box sx={{ textAlign: "center", mt: { xs: SPACING.px48, md: SPACING.px64 } }}>
             <ButtonElement
               component={Link}
               href={data.ctaButton.link}

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Box, Container, Grid, Paper, Chip } from "@mui/material";
 import Link from "next/link";
 import { IFeaturesBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, ANIMATION } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -44,7 +44,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
               label={data.badge}
               size="small"
               sx={{
-                backgroundColor: "rgba(183, 134, 40, 0.1)",
+                backgroundColor: `${COLOR.gold.main}1A`,
                 color: COLOR.textGold,
                 fontWeight: FONT_WEIGHT.semibold,
                 fontSize: FONT_SIZE.xs,
@@ -77,12 +77,12 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                 minHeight: 380,
                 borderRadius: RADIUS.lg,
                 border: `1.5px solid ${COLOR.borderGoldLight}`,
-                background: `linear-gradient(135deg, ${COLOR.bgSecondary} 0%, #FAF4EB 100%)`,
-                transition: "all 0.3s ease",
+                background: `linear-gradient(135deg, ${COLOR.bgSecondary} 0%, ${COLOR.bgTertiary} 100%)`,
+                transition: ANIMATION.md,
                 position: "relative",
                 overflow: "hidden",
                 "&:hover": {
-                  boxShadow: "0 18px 36px rgba(183, 134, 40, 0.14)",
+                  boxShadow: `0 18px 36px ${COLOR.gold.main}24`,
                   borderColor: COLOR.gold.main,
                 },
               }}
@@ -97,10 +97,10 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                       size="small"
                       sx={{
                         width: "fit-content",
-                        backgroundColor: "rgba(183, 134, 40, 0.12)",
+                        backgroundColor: `${COLOR.gold.main}1F`,
                         color: COLOR.textGold,
                         fontWeight: FONT_WEIGHT.bold,
-                        fontSize: "0.68rem",
+                        fontSize: FONT_SIZE.xs,
                       }}
                     />
 
@@ -133,7 +133,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                       sx={{
                         width: 220,
                         height: 150,
-                        backgroundColor: "#E8D8C3",
+                        backgroundColor: COLOR.gold[200],
                         borderRadius: RADIUS.sm,
                         border: `1.5px solid ${COLOR.borderGold}`,
                         position: "relative",
@@ -151,7 +151,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                           left: 0,
                           right: 0,
                           height: 60,
-                          backgroundColor: "#DFCAB0",
+                          backgroundColor: COLOR.gold[100],
                           clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                           transformOrigin: "top center",
                           transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -170,11 +170,11 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                             width: 32,
                             height: 32,
                             borderRadius: RADIUS.full,
-                            backgroundColor: "#A82424",
-                            color: "#FFFFFF",
+                            backgroundColor: COLOR.status.error.main,
+                            color: COLOR.textInverse,
                             boxShadow: SHADOW.md,
                             zIndex: 5,
-                            border: "1.5px solid #781515",
+                            border: `1.5px solid ${COLOR.status.error.dark}`,
                           }}
                         >
                           <IconElement name="Favorite" size="xs" />
@@ -187,7 +187,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                           position: "absolute",
                           width: 190,
                           height: 130,
-                          backgroundColor: "#FFFFFF",
+                          backgroundColor: COLOR.bgPaper,
                           borderRadius: RADIUS.xs,
                           border: `1px solid ${COLOR.borderGold}`,
                           p: 1.5,
@@ -225,10 +225,10 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                 height: "100%",
                 borderRadius: RADIUS.lg,
                 border: `1.5px solid ${COLOR.borderGoldLight}`,
-                background: `linear-gradient(135deg, #FFF9FA 0%, #FCEAEB 100%)`,
-                transition: "all 0.3s ease",
+                background: `linear-gradient(135deg, ${COLOR.rose[50]} 0%, ${COLOR.rose[100]} 100%)`,
+                transition: ANIMATION.md,
                 "&:hover": {
-                  boxShadow: "0 18px 36px rgba(222, 124, 102, 0.15)",
+                  boxShadow: `0 18px 36px ${COLOR.rose.main}26`,
                   borderColor: COLOR.rose.main,
                 },
               }}
@@ -262,11 +262,11 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
               {/* Mini Audio Track Playlist Simulation */}
               <Box
                 sx={{
-                  backgroundColor: "rgba(255, 255, 255, 0.8)",
+                  backgroundColor: `${COLOR.bgPaper}CC`,
                   borderRadius: RADIUS.md,
                   p: 2,
                   mt: 3,
-                  border: `1px solid rgba(222, 124, 102, 0.2)`,
+                  border: `1px solid ${COLOR.rose.main}33`,
                 }}
               >
                 <StackRowAlignJustCenter spacing={1.5}>
@@ -276,7 +276,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                       height: 36,
                       borderRadius: RADIUS.full,
                       backgroundColor: COLOR.rose.main,
-                      color: "#FFFFFF",
+                      color: COLOR.textInverse,
                     }}
                   >
                     <IconElement name="PlayArrow" size="xs" />
@@ -305,9 +305,9 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                 borderRadius: RADIUS.lg,
                 border: `1.5px solid ${COLOR.borderGoldLight}`,
                 backgroundColor: COLOR.bgPaper,
-                transition: "all 0.3s ease",
+                transition: ANIMATION.md,
                 "&:hover": {
-                  boxShadow: "0 18px 36px rgba(183, 134, 40, 0.14)",
+                  boxShadow: `0 18px 36px ${COLOR.gold.main}24`,
                   borderColor: COLOR.gold.main,
                 },
               }}
@@ -354,7 +354,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                     94.2%
                   </TextElement>
                 </StackRowAlignJustBetween>
-                <Box sx={{ width: "100%", height: 6, backgroundColor: "#E5DCD0", borderRadius: RADIUS.full, overflow: "hidden" }}>
+                <Box sx={{ width: "100%", height: 6, backgroundColor: COLOR.gold[100], borderRadius: RADIUS.full, overflow: "hidden" }}>
                   <Box sx={{ width: "94.2%", height: "100%", background: COLOR.btnGradient, borderRadius: RADIUS.full }} />
                 </Box>
                 <TextElement size="xs" colorVariant="secondary" sx={{ mt: 1, textAlign: "center" }}>
@@ -375,9 +375,9 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                 borderRadius: RADIUS.lg,
                 border: `1.5px solid ${COLOR.borderGoldLight}`,
                 backgroundColor: COLOR.bgPaper,
-                transition: "all 0.3s ease",
+                transition: ANIMATION.md,
                 "&:hover": {
-                  boxShadow: "0 18px 36px rgba(183, 134, 40, 0.14)",
+                  boxShadow: `0 18px 36px ${COLOR.gold.main}24`,
                   borderColor: COLOR.gold.main,
                 },
               }}
@@ -409,7 +409,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
               {/* VietQR Preview Box */}
               <Box
                 sx={{
-                  backgroundColor: "#F4EFE6",
+                  backgroundColor: COLOR.bgTertiary,
                   borderRadius: RADIUS.md,
                   p: 2,
                   mt: 3,
@@ -422,7 +422,7 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                       width: 40,
                       height: 40,
                       borderRadius: RADIUS.xs,
-                      backgroundColor: "#FFFFFF",
+                      backgroundColor: COLOR.bgPaper,
                       border: `1px solid ${COLOR.borderGold}`,
                       color: COLOR.gold.main,
                     }}
@@ -453,9 +453,9 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
                 borderRadius: RADIUS.lg,
                 border: `1.5px solid ${COLOR.borderGoldLight}`,
                 backgroundColor: COLOR.bgPaper,
-                transition: "all 0.3s ease",
+                transition: ANIMATION.md,
                 "&:hover": {
-                  boxShadow: "0 18px 36px rgba(183, 134, 40, 0.14)",
+                  boxShadow: `0 18px 36px ${COLOR.gold.main}24`,
                   borderColor: COLOR.gold.main,
                 },
               }}
@@ -485,17 +485,17 @@ export const FeaturesBlock: React.FC<IFeaturesBlockProps> = ({ data, styles }) =
               </Box>
 
               {/* Multi-channel Share Badges */}
-              <StackRowAlignJustCenter spacing={1} sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
+              <StackRowAlignJustCenter spacing={1} sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center", gap: 0.5 }}>
                 {["Zalo", "Messenger", "Facebook", "SMS"].map((channel) => (
                   <Chip
                     key={channel}
                     label={`Gửi qua ${channel}`}
                     size="small"
                     sx={{
-                      backgroundColor: "rgba(183, 134, 40, 0.08)",
+                      backgroundColor: `${COLOR.gold.main}14`,
                       color: COLOR.textPrimary,
                       fontWeight: FONT_WEIGHT.semibold,
-                      fontSize: "0.72rem",
+                      fontSize: FONT_SIZE.xs,
                     }}
                   />
                 ))}

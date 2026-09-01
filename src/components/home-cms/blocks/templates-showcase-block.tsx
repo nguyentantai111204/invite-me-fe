@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Box, Container, Grid, Paper, Chip, Tabs, Tab } from "@mui/material";
 import Link from "next/link";
 import { ITemplatesBlockData, IBlockStyles } from "@/interfaces/home-cms.interface";
-import { COLOR, RADIUS, SHADOW, FONT_SIZE, FONT_WEIGHT } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_SIZE, FONT_WEIGHT, ANIMATION, LETTER_SPACING, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -137,22 +137,22 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
       id="templates"
       sx={{
         backgroundColor: styles?.backgroundColor || COLOR.bgPrimary,
-        py: { xs: 8, md: 12 },
+        py: { xs: SPACING.px64, md: SPACING.px96 },
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
         {/* Section Heading */}
-        <StackColAlignJustCenter spacing={1.5} sx={{ textAlign: "center", mb: 5 }}>
+        <StackColAlignJustCenter spacing={SPACING.px12} sx={{ textAlign: "center", mb: SPACING.px40 }}>
           {data.badge && (
             <Chip
               label={data.badge}
               size="small"
               sx={{
-                backgroundColor: "rgba(183, 134, 40, 0.1)",
+                backgroundColor: `${COLOR.gold.main}1A`,
                 color: COLOR.textGold,
                 fontWeight: FONT_WEIGHT.semibold,
                 fontSize: FONT_SIZE.xs,
-                mb: 1,
+                mb: SPACING.px8,
               }}
             />
           )}
@@ -165,15 +165,15 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
         </StackColAlignJustCenter>
 
         {/* Categories Tab */}
-        <StackRowAlignJustCenter sx={{ mb: 6, justifyContent: "center" }}>
+        <StackRowAlignJustCenter sx={{ mb: SPACING.px48, justifyContent: "center" }}>
           <Tabs
             value={selectedCategory}
             onChange={(_, val) => setSelectedCategory(val)}
             variant="scrollable"
             scrollButtons="auto"
             sx={{
-              backgroundColor: "rgba(183, 134, 40, 0.06)",
-              p: 0.5,
+              backgroundColor: `${COLOR.gold.main}0F`,
+              p: SPACING.px4,
               borderRadius: RADIUS.full,
               border: `1px solid ${COLOR.borderGoldLight}`,
               "& .MuiTab-root": {
@@ -182,10 +182,10 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                 fontSize: FONT_SIZE.sm,
                 borderRadius: RADIUS.full,
                 minHeight: 38,
-                px: 3,
-                mx: 0.25,
+                px: SPACING.px24,
+                mx: SPACING.px2,
                 color: COLOR.textSecondary,
-                transition: "all 0.2s ease",
+                transition: ANIMATION.sm,
                 "&.Mui-selected": {
                   color: COLOR.textInverse,
                   backgroundColor: COLOR.btnPrimary,
@@ -230,12 +230,12 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                     overflow: "hidden",
                     border: `1.5px solid ${COLOR.borderGoldLight}`,
                     backgroundColor: COLOR.bgPaper,
-                    transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+                    transition: ANIMATION.md,
                     position: "relative",
                     "&:hover": {
                       transform: "translateY(-8px)",
                       borderColor: COLOR.gold.main,
-                      boxShadow: "0 20px 38px rgba(183, 134, 40, 0.22)",
+                      boxShadow: `0 20px 38px ${COLOR.gold.main}38`,
                       "& .template-hover-overlay": {
                         opacity: 1,
                         visibility: "visible",
@@ -299,7 +299,7 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                           backdropFilter: "blur(4px)",
                           color: COLOR.textSecondary,
                           fontWeight: FONT_WEIGHT.semibold,
-                          fontSize: "0.68rem",
+                          fontSize: FONT_SIZE.xs,
                           border: `1px solid ${COLOR.borderGoldLight}`,
                         }}
                       />
@@ -346,7 +346,7 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                         fontFamilyType="serif"
                         weight="bold"
                         sx={{
-                          color: visual.isDark ? "#FFFFFF" : COLOR.textPrimary,
+                          color: visual.isDark ? COLOR.textInverse : COLOR.textPrimary,
                           lineHeight: 1.25,
                           fontSize: "1.35rem",
                           my: 1,
@@ -368,7 +368,7 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                         weight="bold"
                         sx={{
                           color: visual.accentColor,
-                          letterSpacing: "0.08em",
+                          letterSpacing: LETTER_SPACING.wider,
                           mb: 0.5,
                         }}
                       >
@@ -428,14 +428,14 @@ export const TemplatesShowcaseBlock: React.FC<ITemplatesShowcaseBlockProps> = ({
                         size="medium"
                         rounded="md"
                         sx={{
-                          borderColor: "#FFFFFF",
-                          color: "#FFFFFF",
-                          backgroundColor: "rgba(26, 22, 18, 0.4)",
+                          borderColor: COLOR.textInverse,
+                          color: COLOR.textInverse,
+                          backgroundColor: `${COLOR.bgDark}66`,
                           backdropFilter: "blur(4px)",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                           "&:hover": {
-                            backgroundColor: "rgba(26, 22, 18, 0.7)",
-                            borderColor: "#FFFFFF",
+                            backgroundColor: `${COLOR.bgDark}B3`,
+                            borderColor: COLOR.textInverse,
                           },
                         }}
                         leftIcon={<IconElement name="Visibility" size="xs" />}

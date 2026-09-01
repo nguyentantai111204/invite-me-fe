@@ -12,7 +12,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import { ICanvasLayer, ICanvasTextLayer, ICanvasImageLayer, ICanvasShapeLayer } from "@/interfaces/canvas-editor.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_SIZE, SPACING, ANIMATION } from "@/constants/style.constant";
 import {
   TextElement,
   IconElement,
@@ -39,38 +39,34 @@ export const CanvasPropertyBar: React.FC<ICanvasPropertyBarProps> = ({
 }) => {
   if (!selectedLayer) {
     return (
-      <Box
+      <StackRowAlignJustCenter
         sx={{
           height: 52,
           backgroundColor: COLOR.bgPaper,
           borderBottom: `1px solid ${COLOR.borderGoldLight}`,
-          px: 3,
-          display: "flex",
-          alignItems: "center",
+          px: SPACING.px24,
           boxShadow: SHADOW.sm,
         }}
       >
         <TextElement size="xs" colorVariant="secondary" sx={{ fontStyle: "italic" }}>
           💡 Chạm vào bất kỳ đối tượng nào trên thiệp để chỉnh sửa kích thước, chữ, font và màu sắc.
         </TextElement>
-      </Box>
+      </StackRowAlignJustCenter>
     );
   }
 
   const isText = selectedLayer.type === "text";
   const txtLayer = isText ? (selectedLayer as ICanvasTextLayer) : null;
 
+  // StackRowAlignJustBetween = display:flex, align:center, justify:space-between
   return (
-    <Box
+    <StackRowAlignJustBetween
       sx={{
         height: 52,
         backgroundColor: COLOR.bgPaper,
         borderBottom: `1px solid ${COLOR.borderGoldLight}`,
-        px: 3,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 2,
+        px: SPACING.px24,
+        gap: SPACING.px16,
         overflowX: "auto",
         boxShadow: SHADOW.sm,
         zIndex: 50,
@@ -94,7 +90,7 @@ export const CanvasPropertyBar: React.FC<ICanvasPropertyBarProps> = ({
               size="small"
               value={txtLayer.fontFamily || "'Playfair Display', serif"}
               onChange={(e) => onUpdateLayer(txtLayer.id, { fontFamily: e.target.value })}
-              sx={{ height: 32, fontSize: "0.8rem", minWidth: 140 }}
+              sx={{ height: 32, fontSize: FONT_SIZE.xs, minWidth: 140 }}
             >
               <MenuItem value="'Playfair Display', serif">Playfair Display (Serif)</MenuItem>
               <MenuItem value="Inter, sans-serif">Inter (Hiện Đại)</MenuItem>
@@ -107,7 +103,7 @@ export const CanvasPropertyBar: React.FC<ICanvasPropertyBarProps> = ({
               size="small"
               value={txtLayer.fontSize || 18}
               onChange={(e) => onUpdateLayer(txtLayer.id, { fontSize: Number(e.target.value) })}
-              sx={{ height: 32, fontSize: "0.8rem", width: 70 }}
+              sx={{ height: 32, fontSize: FONT_SIZE.xs, width: 70 }}
             >
               {[11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48].map((size) => (
                 <MenuItem key={size} value={size}>
@@ -172,9 +168,9 @@ export const CanvasPropertyBar: React.FC<ICanvasPropertyBarProps> = ({
                     height: 22,
                     borderRadius: RADIUS.full,
                     backgroundColor: color,
-                    border: `1.5px solid ${txtLayer.fill === color ? COLOR.gold.main : "#DCDCDC"}`,
+                    border: `1.5px solid ${txtLayer.fill === color ? COLOR.gold.main : COLOR.borderSubtle}`,
                     cursor: "pointer",
-                    boxShadow: txtLayer.fill === color ? "0 0 0 2px #B78628" : "none",
+                    boxShadow: txtLayer.fill === color ? `0 0 0 2px ${COLOR.gold.main}` : "none",
                   }}
                 />
               ))}
@@ -211,6 +207,6 @@ export const CanvasPropertyBar: React.FC<ICanvasPropertyBarProps> = ({
           </IconButton>
         </Tooltip>
       </StackRowAlignJustCenter>
-    </Box>
+    </StackRowAlignJustBetween>
   );
 };

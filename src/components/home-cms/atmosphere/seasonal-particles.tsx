@@ -26,29 +26,29 @@ const EFFECT_CONFIGS: Record<
 > = {
   none: { count: 0, chars: [], colors: [] },
   tet: {
-    count: 28,
-    chars: ["🌸", "🌼", "🧧", "✨", "🟡"],
-    colors: ["#D4AF37", "#FFD700", "#FF4D4F", "#FAAD14"],
+    count: 14,
+    chars: ["🌸", "🌼", "✨"],
+    colors: ["#D4AF37", "#FFD700", "#FAAD14"],
   },
   noel: {
-    count: 36,
-    chars: ["❄️", "❅", "❆", "✨", "⭐"],
-    colors: ["#FFFFFF", "#E6F7FF", "#BAE7FF"],
+    count: 18,
+    chars: ["❄️", "✨", "⭐"],
+    colors: ["#FFFFFF", "#E6F7FF"],
   },
   wedding: {
-    count: 22,
-    chars: ["💖", "🌸", "💍", "✨", "🕊️"],
-    colors: ["#DE7C66", "#D4AF37", "#FBEDE9", "#FFB6C1"],
+    count: 12,
+    chars: ["🌸", "✨", "💖"],
+    colors: ["#DE7C66", "#D4AF37"],
   },
   sakura: {
-    count: 30,
-    chars: ["🌸", "💮", "🌺"],
-    colors: ["#FFB7C5", "#FFCCD5", "#FFF0F3"],
+    count: 15,
+    chars: ["🌸", "💮"],
+    colors: ["#FFB7C5", "#FFF0F3"],
   },
   fireworks: {
-    count: 35,
-    chars: ["✨", "💥", "⭐", "🌟", "💫"],
-    colors: ["#FFD700", "#FF4D4F", "#40A9FF", "#73D13D", "#9254DE"],
+    count: 16,
+    chars: ["✨", "🌟", "💫"],
+    colors: ["#FFD700", "#FF4D4F", "#73D13D"],
   },
 };
 
@@ -78,12 +78,12 @@ export const SeasonalParticles: React.FC<ISeasonalParticlesProps> = ({ effect })
     const particles: IParticle[] = Array.from({ length: config.count }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      size: Math.random() * 10 + 10,
-      speedX: (Math.random() - 0.5) * 0.6,
-      speedY: Math.random() * 0.7 + 0.3,
+      size: Math.random() * 6 + 12,
+      speedX: (Math.random() - 0.5) * 0.4,
+      speedY: Math.random() * 0.5 + 0.2,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 1,
-      opacity: Math.random() * 0.35 + 0.25,
+      rotationSpeed: (Math.random() - 0.5) * 0.8,
+      opacity: Math.random() * 0.3 + 0.2,
       character: config.chars[Math.floor(Math.random() * config.chars.length)],
       color: config.colors[Math.floor(Math.random() * config.colors.length)],
     }));
@@ -141,7 +141,7 @@ export const SeasonalParticles: React.FC<ISeasonalParticlesProps> = ({ effect })
         width: "100vw",
         height: "100vh",
         pointerEvents: "none",
-        zIndex: 9999,
+        zIndex: 2,
       }}
     />
   );
