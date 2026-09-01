@@ -17,198 +17,173 @@ import {
   STACK_ROW_ALIGN_JUST_START,
 } from "./stack-custom.style";
 
-export const StackRowAlignJustStart: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignJustStart = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignJustStart.displayName = "StackRowAlignJustStart";
 
-export const StackRowAlignJustCenter: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_JUST_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignJustCenter = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_JUST_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignJustCenter.displayName = "StackRowAlignJustCenter";
 
-export const StackRowAlignJustBetween: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_JUST_BETWEEN, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignJustBetween = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_JUST_BETWEEN, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignJustBetween.displayName = "StackRowAlignJustBetween";
 
-export const StackRowAlignCenterJustStart: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_CENTER_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignCenterJustStart = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_CENTER_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignCenterJustStart.displayName = "StackRowAlignCenterJustStart";
 
-export const StackRowAlignCenterJustEnd: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_CENTER_JUST_END, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignCenterJustEnd = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_CENTER_JUST_END, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignCenterJustEnd.displayName = "StackRowAlignCenterJustEnd";
 
-export const StackRowAlignCenterWrap: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "row",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_ROW_ALIGN_CENTER_WRAP, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackRowAlignCenterWrap = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "row", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_ROW_ALIGN_CENTER_WRAP, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackRowAlignCenterWrap.displayName = "StackRowAlignCenterWrap";
 
-export const StackColAlignJustStart: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignJustStart = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignJustStart.displayName = "StackColAlignJustStart";
 
-export const StackColAlignJustCenter: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_JUST_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignJustCenter = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_JUST_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignJustCenter.displayName = "StackColAlignJustCenter";
 
-export const StackColAlignJustBetween: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_JUST_BETWEEN, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignJustBetween = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_JUST_BETWEEN, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignJustBetween.displayName = "StackColAlignJustBetween";
 
-export const StackColAlignCenterJustStart: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_CENTER_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignCenterJustStart = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_CENTER_JUST_START, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignCenterJustStart.displayName = "StackColAlignCenterJustStart";
 
-export const StackColAlignCenterJustEnd: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_CENTER_JUST_END, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignCenterJustEnd = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_CENTER_JUST_END, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignCenterJustEnd.displayName = "StackColAlignCenterJustEnd";
 
-export const StackColAlignCenterWrap: React.FC<ICustomStackProps> = ({
-  sx,
-  direction = "column",
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    direction={direction}
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_COL_ALIGN_CENTER_WRAP, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackColAlignCenterWrap = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, direction = "column", gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      direction={direction}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_COL_ALIGN_CENTER_WRAP, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackColAlignCenterWrap.displayName = "StackColAlignCenterWrap";
 
-export const StackCenter: React.FC<ICustomStackProps> = ({
-  sx,
-  gap,
-  spacing,
-  ...props
-}) => (
-  <Stack
-    spacing={spacing !== undefined ? spacing : gap}
-    sx={[STACK_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
-    {...props}
-  />
+export const StackCenter = React.forwardRef<HTMLDivElement, ICustomStackProps>(
+  ({ sx, gap, spacing, ...props }, ref) => (
+    <Stack
+      ref={ref}
+      spacing={spacing !== undefined ? spacing : gap}
+      sx={[STACK_CENTER, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...props}
+    />
+  )
 );
+StackCenter.displayName = "StackCenter";
 
 // Convenient aliases
 export const StackRow = StackRowAlignJustStart;
@@ -217,4 +192,3 @@ export const StackRowBetween = StackRowAlignJustBetween;
 export const StackColBetween = StackColAlignJustBetween;
 export const StackRowCenter = StackRowAlignJustCenter;
 export const StackColCenter = StackColAlignJustCenter;
-

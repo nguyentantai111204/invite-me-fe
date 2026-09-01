@@ -66,7 +66,7 @@ const URLImage: React.FC<{
       rotation={layer.rotation || 0}
       scaleX={layer.scaleX || 1}
       scaleY={layer.scaleY || 1}
-      opacity={layer.opacity ?? 1}
+      opacity={(layer.opacity ?? 1) * (layer.isHidden ? 0.55 : 1)}
       cornerRadius={layer.borderRadius || 0}
       draggable={!layer.isLocked}
       onClick={onSelect}
@@ -127,7 +127,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
       transformerRef.current.nodes([]);
       transformerRef.current.getLayer()?.batchDraw();
     }
-  }, [selectedId, document.layers]);
+  }, [selectedId, document?.layers]);
 
   // Keyboard shortcut listener (Delete key)
   useEffect(() => {
@@ -158,7 +158,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
   // Smart Alignment Snapping calculation
   const handleDragMove = (e: any, width = 390) => {
     const node = e.target;
-    const canvasCenterX = document.width / 2; // 195px
+    const canvasCenterX = (document?.width || 390) / 2; // 195px
     const nodeCenterX = node.x() + (width * (node.scaleX() || 1)) / 2;
 
     // Check center snap
@@ -173,8 +173,11 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
     }
   };
 
-  const selectedLayer = document.layers.find((l) => l.id === selectedId);
-  const editingLayer = document.layers.find((l) => l.id === editingTextId) as ICanvasTextLayer | undefined;
+  const layersList = [...(document?.layers || [])].sort(
+    (a, b) => (a.zIndex || 0) - (b.zIndex || 0)
+  );
+  const selectedLayer = layersList.find((l) => l.id === selectedId);
+  const editingLayer = layersList.find((l) => l.id === editingTextId) as ICanvasTextLayer | undefined;
 
   if (!isClient) {
     return (
@@ -192,6 +195,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
 
   return (
     <Box
+      data-tour="canvas-stage"
       sx={{
         position: "relative",
         width: document.width * scale,
@@ -350,8 +354,8 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
           )}
 
           {/* Render All Layers */}
-          {document.layers.map((layer) => {
-            if (layer.isHidden) return null;
+          {layersList.map((layer) => {
+            if (layer.isHidden && layer.id !== selectedId) return null;
 
             // 1. Text Layer
             if (layer.type === "text") {
@@ -373,6 +377,8 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
                   fill={txtLayer.fill || "#2A231C"}
                   align={txtLayer.textAlign || "center"}
                   letterSpacing={txtLayer.letterSpacing || 0}
+                  lineHeight={txtLayer.lineHeight || 1.4}
+                  opacity={(txtLayer.opacity ?? 1) * (txtLayer.isHidden ? 0.55 : 1)}
                   rotation={txtLayer.rotation || 0}
                   scaleX={txtLayer.scaleX || 1}
                   scaleY={txtLayer.scaleY || 1}
@@ -438,6 +444,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
                   width={stkLayer.width}
                   align="center"
                   fontSize={stkLayer.fontSize || 36}
+                  opacity={(stkLayer.opacity ?? 1) * (stkLayer.isHidden ? 0.55 : 1)}
                   rotation={stkLayer.rotation || 0}
                   scaleX={stkLayer.scaleX || 1}
                   scaleY={stkLayer.scaleY || 1}
@@ -483,9 +490,11 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
                     fill={shpLayer.fill}
                     stroke={shpLayer.stroke}
                     strokeWidth={shpLayer.strokeWidth || 1}
+                    opacity={(shpLayer.opacity ?? 1) * (shpLayer.isHidden ? 0.55 : 1)}
                     rotation={shpLayer.rotation || 0}
                     scaleX={shpLayer.scaleX || 1}
                     scaleY={shpLayer.scaleY || 1}
+                    listening={!shpLayer.isLocked}
                     draggable={!shpLayer.isLocked}
                     onClick={() => onSelectLayer(shpLayer.id)}
                     onTap={() => onSelectLayer(shpLayer.id)}
@@ -524,9 +533,11 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
                   stroke={shpLayer.stroke}
                   strokeWidth={shpLayer.strokeWidth || 1}
                   cornerRadius={shpLayer.borderRadius || 0}
+                  opacity={(shpLayer.opacity ?? 1) * (shpLayer.isHidden ? 0.55 : 1)}
                   rotation={shpLayer.rotation || 0}
                   scaleX={shpLayer.scaleX || 1}
                   scaleY={shpLayer.scaleY || 1}
+                  listening={!shpLayer.isLocked}
                   draggable={!shpLayer.isLocked}
                   onClick={() => onSelectLayer(shpLayer.id)}
                   onTap={() => onSelectLayer(shpLayer.id)}

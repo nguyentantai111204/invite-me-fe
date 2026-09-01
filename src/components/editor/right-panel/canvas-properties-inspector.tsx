@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
-  Grid,
-  Paper,
   Divider,
   Select,
   MenuItem,
@@ -12,313 +10,379 @@ import {
   ToggleButton,
   IconButton,
   Tooltip,
+  Slider,
 } from "@mui/material";
-import { ICanvasLayer, ICanvasTextLayer } from "@/interfaces/canvas-editor.interface";
-import { COLOR, RADIUS, SHADOW, FONT_SIZE, FONT_WEIGHT, SPACING, ANIMATION } from "@/constants/style.constant";
+import {
+  ICanvasLayer,
+  ICanvasTextLayer,
+  ICanvasImageLayer,
+  ICanvasShapeLayer,
+  CanvasElementAnimationType,
+  CanvasOpeningEffectType,
+  CanvasAmbientParticleType,
+} from "@/interfaces/canvas-editor.interface";
+import {
+  COLOR,
+  RADIUS,
+  SHADOW,
+  FONT_SIZE,
+  FONT_WEIGHT,
+  SPACING,
+  ANIMATION,
+} from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
   ButtonElement,
   IconElement,
+  IconName,
   StackCol,
-  StackRowAlignJustCenter,
+  StackRow,
   StackRowAlignJustBetween,
+  StackRowAlignJustStart,
+  StackCenter,
 } from "@/components/shared";
 
-interface ICanvasPropertiesInspectorProps {
+export interface ICanvasPropertiesInspectorProps {
   selectedLayer: ICanvasLayer | null;
   canvasBg: string;
   canvasHeight: number;
+  ambientParticle?: CanvasAmbientParticleType;
+  openingEffect?: CanvasOpeningEffectType;
   onUpdateLayer: (id: string, updates: Partial<ICanvasLayer>) => void;
   onDeleteLayer: (id: string) => void;
+  onDuplicateLayer?: (id: string) => void;
   onBringForward: (id: string) => void;
   onSendBackward: (id: string) => void;
   onDeselect: () => void;
   onSetBackground: (color: string) => void;
+  onSetOpeningEffect?: (effect: CanvasOpeningEffectType) => void;
+  onSetAmbientParticle?: (particle: CanvasAmbientParticleType) => void;
   onExpandHeight: (delta: number) => void;
 }
 
-const PRESET_COLORS = [
+const LUXURY_PALETTE = [
   { label: "Vàng Hoàng Kim", hex: "#B78628" },
-  { label: "Vàng Mù Tạt",    hex: "#C59B4B" },
-  { label: "Nâu Đen Đậm",    hex: "#221A12" },
-  { label: "Nhung Đỏ",       hex: "#8B1E2B" },
-  { label: "Rượu Vang",      hex: "#8B2435" },
-  { label: "Hồng Đào",       hex: "#DE7C66" },
-  { label: "Hổ Phách",       hex: "#D97706" },
-  { label: "Nâu Đồng",       hex: "#78350F" },
-  { label: "Xám Đá",         hex: "#6B7280" },
-  { label: "Xám Nhạt",       hex: "#E5E7EB" },
-  { label: "Trắng Tinh Khôi", hex: "#FFFFFF" },
+  { label: "Vàng Sâm Panh", hex: "#C59B4B" },
+  { label: "Đỏ Rượu Vang", hex: "#8B1E2B" },
+  { label: "Nhung Đỏ Đậm", hex: "#3B1117" },
+  { label: "Hồng San Hô", hex: "#DE7C66" },
+  { label: "Hổ Phách Ấm", hex: "#D97706" },
+  { label: "Nâu Espresso", hex: "#221A12" },
+  { label: "Xanh Rêu Quý Tộc", hex: "#1A2F23" },
+  { label: "Xám Đá Tinh Tế", hex: "#6B7280" },
+  { label: "Trắng Ngọc Trai", hex: "#FFFFFF" },
+];
+
+const FONT_OPTIONS = [
+  { label: "Playfair Display", value: "'Playfair Display', serif", category: "Serif Quý Phái" },
+  { label: "Cormorant Garamond", value: "'Cormorant Garamond', serif", category: "Serif Cổ Điển" },
+  { label: "Inter", value: "Inter, sans-serif", category: "Hiện Đại Tối Giản" },
+  { label: "Be Vietnam Pro", value: "'Be Vietnam Pro', sans-serif", category: "Chuẩn Tiếng Việt" },
+  { label: "Great Vibes", value: "'Great Vibes', cursive", category: "Thư Pháp Sang Trọng" },
+  { label: "Cinzel", value: "'Cinzel', serif", category: "Hoàng Gia Châu Âu" },
 ];
 
 const BG_PALETTES = [
-  { name: "Trắng Hoàng Kim", color: "#FFFFFF", border: "#C59B4B" },
-  { name: "Kem Ngọc Trai",   color: "#FCFAF6", border: "#E0D1B9" },
-  { name: "Hồng Pastel",     color: "#FFF8F7", border: "#E58B7B" },
-  { name: "Nhung Đỏ Cổ Điển", color: "#3B1117", border: "#8B1E2B" },
+  { name: "Trắng Hoàng Kim", color: "#FFFFFF", border: "#C59B4B", darkText: true },
+  { name: "Kem Ngọc Trai", color: "#FCFAF6", border: "#E0D1B9", darkText: true },
+  { name: "Hồng Pastel", color: "#FFF8F7", border: "#E58B7B", darkText: true },
+  { name: "Nhung Đỏ Hoàng Gia", color: "#3B1117", border: "#8B1E2B", darkText: false },
+  { name: "Xanh Rêu Quý Tộc", color: "#1A2F23", border: "#2D5A43", darkText: false },
+  { name: "Espresso Đậm", color: "#1A1612", border: "#4A3B2C", darkText: false },
 ];
+
+const ANIMATION_OPTIONS: { label: string; value: CanvasElementAnimationType; icon: IconName }[] = [
+  { label: "Không hiệu ứng", value: "none", icon: "Clear" },
+  { label: "Hiện mờ dần (Fade In)", value: "fade-in", icon: "Visibility" },
+  { label: "Trượt lên (Slide Up)", value: "slide-up", icon: "ArrowUpward" },
+  { label: "Phóng to nhẹ (Zoom In)", value: "zoom-in", icon: "CenterFocusStrong" },
+  { label: "Tỏa sáng (Shimmer)", value: "shimmer", icon: "AutoAwesome" },
+  { label: "Nhấp nhô (Bounce)", value: "bounce", icon: "TouchApp" },
+];
+
+const OPENING_OPTIONS: { label: string; value: CanvasOpeningEffectType; desc: string }[] = [
+  { label: "Bao thư 3D (Envelope)", value: "envelope-3d", desc: "Mở nắp phong bì chạm nổi" },
+  { label: "Cánh cửa đôi (Gate Fold)", value: "gate-fold", desc: "Mở 2 cánh sang hai bên" },
+  { label: "Cuộn thư cổ (Scroll)", value: "scroll", desc: "Mở cuộn hoàng gia từ từ" },
+  { label: "Hiện mờ (Fade In)", value: "fade", desc: "Xuất hiện êm dịu và sang trọng" },
+];
+
+const PARTICLE_OPTIONS: { label: string; value: CanvasAmbientParticleType; desc: string }[] = [
+  { label: "Không có", value: "none", desc: "Không hiệu ứng hạt" },
+  { label: "Hoa anh đào (Sakura)", value: "sakura", desc: "Cánh hoa đào rơi nhẹ nhàng" },
+  { label: "Bụi vàng (Gold Dust)", value: "gold-dust", desc: "Bụi kim tuyến hoàng kim lấp lánh" },
+  { label: "Trái tim (Hearts)", value: "hearts", desc: "Tim bay lãng mạn tình yêu" },
+  { label: "Bông tuyết (Snow)", value: "snow", desc: "Tuyết rơi mùa đông kỳ diệu" },
+];
+
+// Reusable Section Card Styling
+const SECTION_CARD_SX = {
+  width: "100%",
+  boxSizing: "border-box" as const,
+  p: SPACING.px12,
+  borderRadius: RADIUS.md,
+  border: `1px solid ${COLOR.borderGoldLight}`,
+  backgroundColor: COLOR.bgSecondary,
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: SPACING.px8,
+};
 
 export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps> = ({
   selectedLayer,
   canvasBg,
   canvasHeight,
+  ambientParticle = "gold-dust",
+  openingEffect = "envelope-3d",
   onUpdateLayer,
   onDeleteLayer,
+  onDuplicateLayer,
   onBringForward,
   onSendBackward,
   onDeselect,
   onSetBackground,
+  onSetOpeningEffect,
+  onSetAmbientParticle,
   onExpandHeight,
 }) => {
-  const [customHex, setCustomHex] = useState<string>("#B78628");
-
   const isText = selectedLayer?.type === "text";
-  const txtLayer = isText ? (selectedLayer as ICanvasTextLayer) : null;
+  const isImage = selectedLayer?.type === "image";
+  const isShape = selectedLayer?.type === "shape";
 
-  const handleHexChange = (hex: string) => {
-    setCustomHex(hex);
-    if (txtLayer) {
-      onUpdateLayer(txtLayer.id, { fill: hex });
+  const txtLayer = isText ? (selectedLayer as ICanvasTextLayer) : null;
+  const imgLayer = isImage ? (selectedLayer as ICanvasImageLayer) : null;
+  const shapeLayer = isShape ? (selectedLayer as ICanvasShapeLayer) : null;
+
+  const currentFill = txtLayer?.fill || shapeLayer?.fill || "#B78628";
+
+  const handleCenterAlignHorizontal = () => {
+    if (!selectedLayer) return;
+    const width = selectedLayer.width || 300;
+    const centeredX = Math.max(0, Math.round((390 - width) / 2));
+    onUpdateLayer(selectedLayer.id, { x: centeredX });
+  };
+
+  const getLayerIcon = (): IconName => {
+    if (!selectedLayer) return "Settings";
+    switch (selectedLayer.type) {
+      case "text":
+        return "TextFields";
+      case "image":
+        return "Image";
+      case "shape":
+        return "Crop";
+      case "sticker":
+        return "AutoAwesome";
+      default:
+        return "Layers";
+    }
+  };
+
+  const getLayerTypeName = () => {
+    if (!selectedLayer) return "CÀI ĐẶT THIỆP";
+    switch (selectedLayer.type) {
+      case "text":
+        return "VĂN BẢN";
+      case "image":
+        return "HÌNH ẢNH";
+      case "shape":
+        return "HÌNH KHỐI";
+      case "sticker":
+        return "HỌA TIẾT";
+      default:
+        return "ĐỐI TƯỢNG";
     }
   };
 
   return (
     <Box
+      data-tour="properties-inspector"
       sx={{
-        width: 330,
+        width: 320,
         height: "100%",
         backgroundColor: COLOR.bgPaper,
         borderLeft: `1px solid ${COLOR.borderGoldLight}`,
+        boxShadow: SHADOW.sm,
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
         overflowX: "hidden",
+        boxSizing: "border-box",
         p: SPACING.px16,
         zIndex: 20,
         flexShrink: 0,
-        "&::-webkit-scrollbar": { width: "5px" },
+        "&::-webkit-scrollbar": { width: "4px" },
         "&::-webkit-scrollbar-thumb": {
           background: COLOR.borderSubtle,
-          borderRadius: RADIUS.xs,
+          borderRadius: RADIUS.full,
         },
       }}
     >
       {selectedLayer ? (
-        <StackCol spacing={SPACING.px16}>
-          {/* Header */}
-          <StackRowAlignJustBetween sx={{ alignItems: "center", pt: 0.5 }}>
-            <StackCol spacing={0}>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
-                THUỘC TÍNH ĐỐI TƯỢNG
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="gold" weight="bold">
-                {selectedLayer.name || selectedLayer.type.toUpperCase()}
-              </TextElement>
-            </StackCol>
-
-            <Tooltip title="Xóa đối tượng này khỏi thiệp" arrow>
-              <IconButton
-                size="small"
-                onClick={() => onDeleteLayer(selectedLayer.id)}
+        <StackCol spacing={SPACING.px16} sx={{ width: "100%" }}>
+          {/* 1. Header Bar: Icon, Name & Fast Action Tools */}
+          <StackRowAlignJustBetween
+            sx={{
+              width: "100%",
+              pb: SPACING.px12,
+              borderBottom: `1px solid ${COLOR.divider}`,
+              alignItems: "center",
+            }}
+          >
+            <StackRowAlignJustStart sx={{ gap: SPACING.px8, alignItems: "center", minWidth: 0, flex: 1 }}>
+              <StackCenter
                 sx={{
-                  color: COLOR.status.error.main,
-                  backgroundColor: COLOR.status.error.light,
-                  borderRadius: RADIUS.md,
-                  p: 0.75,
-                  "&:hover": { backgroundColor: `${COLOR.status.error.main}33` },
+                  width: 32,
+                  height: 32,
+                  borderRadius: RADIUS.sm,
+                  backgroundColor: COLOR.gold[50],
+                  border: `1px solid ${COLOR.borderGoldLight}`,
+                  color: COLOR.gold.main,
+                  flexShrink: 0,
                 }}
               >
-                <IconElement name="Delete" size="xs" />
-              </IconButton>
-            </Tooltip>
+                <IconElement name={getLayerIcon()} size="xs" />
+              </StackCenter>
+              <StackCol spacing={0} sx={{ minWidth: 0, flex: 1 }}>
+                <TextElement
+                  size="xs"
+                  weight="bold"
+                  colorVariant="primary"
+                  sx={{
+                    letterSpacing: "0.06em",
+                    fontSize: "0.68rem",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {getLayerTypeName()}
+                </TextElement>
+                <TextElement
+                  size="xs"
+                  colorVariant="gold"
+                  weight="semibold"
+                  sx={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: 120,
+                  }}
+                >
+                  {selectedLayer.name || "Đối tượng"}
+                </TextElement>
+              </StackCol>
+            </StackRowAlignJustStart>
+
+            {/* Quick Actions */}
+            <StackRow sx={{ gap: SPACING.px4, flexShrink: 0 }}>
+              {onDuplicateLayer && (
+                <Tooltip title="Nhân bản (Ctrl+D)" arrow>
+                  <IconButton
+                    size="small"
+                    onClick={() => onDuplicateLayer(selectedLayer.id)}
+                    sx={{
+                      borderRadius: RADIUS.xs,
+                      p: 0.5,
+                      color: COLOR.textSecondary,
+                      "&:hover": { color: COLOR.gold.main, backgroundColor: COLOR.gold[50] },
+                    }}
+                  >
+                    <IconElement name="ContentCopy" size="xs" />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              <Tooltip title={selectedLayer.isLocked ? "Mở khóa" : "Khóa vị trí"} arrow>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    onUpdateLayer(selectedLayer.id, { isLocked: !selectedLayer.isLocked })
+                  }
+                  sx={{
+                    borderRadius: RADIUS.xs,
+                    p: 0.5,
+                    color: selectedLayer.isLocked ? COLOR.gold.main : COLOR.textSecondary,
+                    backgroundColor: selectedLayer.isLocked ? COLOR.gold[50] : "transparent",
+                    "&:hover": { color: COLOR.gold.main, backgroundColor: COLOR.gold[50] },
+                  }}
+                >
+                  <IconElement name={selectedLayer.isLocked ? "Lock" : "LockOpen"} size="xs" />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Xóa đối tượng" arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => onDeleteLayer(selectedLayer.id)}
+                  sx={{
+                    borderRadius: RADIUS.xs,
+                    p: 0.5,
+                    color: COLOR.status.error.main,
+                    "&:hover": {
+                      color: COLOR.status.error.dark,
+                      backgroundColor: COLOR.status.error.light,
+                    },
+                  }}
+                >
+                  <IconElement name="Delete" size="xs" />
+                </IconButton>
+              </Tooltip>
+            </StackRow>
           </StackRowAlignJustBetween>
 
-          {/* 1. Kiểu chữ & Font (nếu là layer Text) */}
-          {isText && txtLayer && (
-            <Paper
-              elevation={0}
+          {selectedLayer.isHidden && (
+            <Box
               sx={{
-                p: SPACING.px16,
-                borderRadius: RADIUS.md,
-                border: `1px solid ${COLOR.borderGoldLight}`,
-                backgroundColor: COLOR.bgSecondary,
+                width: "100%",
+                boxSizing: "border-box",
+                backgroundColor: "#FFFBEB",
+                border: "1px solid #FDE68A",
+                borderRadius: RADIUS.sm,
+                p: SPACING.px8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: SPACING.px6,
               }}
             >
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px12 }}>
-                ✍️ Kiểu chữ & Cỡ chữ
-              </TextElement>
-
-              <StackCol spacing={SPACING.px12}>
-                {/* Font Selector */}
-                <Box>
-                  <TextElement size="xs" weight="semibold" sx={{ mb: SPACING.px4 }}>
-                    Phông chữ nghệ thuật
-                  </TextElement>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={txtLayer.fontFamily || "'Playfair Display', serif"}
-                    onChange={(e) => onUpdateLayer(txtLayer.id, { fontFamily: e.target.value })}
-                    sx={{ backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.sm, borderRadius: RADIUS.sm }}
-                  >
-                    <MenuItem value="'Playfair Display', serif">Playfair Display (Serif Quý Tộc)</MenuItem>
-                    <MenuItem value="Inter, sans-serif">Inter (Hiện Đại Sang Trọng)</MenuItem>
-                    <MenuItem value="'Great Vibes', cursive">Great Vibes (Nghệ Thuật Uốn Lượn)</MenuItem>
-                    <MenuItem value="'Cinzel', serif">Cinzel (Hoàng Gia Châu Âu)</MenuItem>
-                  </Select>
-                </Box>
-
-                {/* Size & Bold/Italic */}
-                <Box>
-                  <StackRowAlignJustBetween sx={{ mb: SPACING.px4 }}>
-                    <TextElement size="xs" weight="semibold">
-                      Cỡ chữ (px)
-                    </TextElement>
-                    <TextElement size="xs" weight="semibold">
-                      Đậm / Nghiêng
-                    </TextElement>
-                  </StackRowAlignJustBetween>
-                  <StackRowAlignJustBetween>
-                    <Select
-                      size="small"
-                      value={txtLayer.fontSize || 22}
-                      onChange={(e) => onUpdateLayer(txtLayer.id, { fontSize: Number(e.target.value) })}
-                      sx={{ width: 110, backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.sm, borderRadius: RADIUS.sm }}
-                    >
-                      {[11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 30, 32, 36, 42, 48].map((size) => (
-                        <MenuItem key={size} value={size}>
-                          {size}px
-                        </MenuItem>
-                      ))}
-                    </Select>
-
-                    <ToggleButtonGroup size="small" sx={{ backgroundColor: COLOR.bgPaper }}>
-                      <ToggleButton
-                        value="bold"
-                        selected={txtLayer.fontWeight === "bold"}
-                        onClick={() =>
-                          onUpdateLayer(txtLayer.id, {
-                            fontWeight: txtLayer.fontWeight === "bold" ? "normal" : "bold",
-                          })
-                        }
-                      >
-                        <Tooltip title="In đậm" arrow>
-                          <span><IconElement name="FormatBold" size="xs" /></span>
-                        </Tooltip>
-                      </ToggleButton>
-                      <ToggleButton
-                        value="italic"
-                        selected={txtLayer.fontStyle === "italic"}
-                        onClick={() =>
-                          onUpdateLayer(txtLayer.id, {
-                            fontStyle: txtLayer.fontStyle === "italic" ? "normal" : "italic",
-                          })
-                        }
-                      >
-                        <Tooltip title="In nghiêng" arrow>
-                          <span><IconElement name="FormatItalic" size="xs" /></span>
-                        </Tooltip>
-                      </ToggleButton>
-                    </ToggleButtonGroup>
-                  </StackRowAlignJustBetween>
-                </Box>
-
-                {/* Căn lề */}
-                <Box>
-                  <TextElement size="xs" weight="semibold" sx={{ mb: SPACING.px4 }}>
-                    Căn lề dòng chữ
-                  </TextElement>
-                  <ToggleButtonGroup
-                    fullWidth
-                    size="small"
-                    value={txtLayer.textAlign || "center"}
-                    exclusive
-                    onChange={(_, val) => val && onUpdateLayer(txtLayer.id, { textAlign: val })}
-                    sx={{ backgroundColor: COLOR.bgPaper }}
-                  >
-                    <ToggleButton value="left">
-                      <Tooltip title="Căn trái" arrow><span><IconElement name="FormatAlignLeft" size="xs" /></span></Tooltip>
-                    </ToggleButton>
-                    <ToggleButton value="center">
-                      <Tooltip title="Căn giữa" arrow><span><IconElement name="FormatAlignCenter" size="xs" /></span></Tooltip>
-                    </ToggleButton>
-                    <ToggleButton value="right">
-                      <Tooltip title="Căn phải" arrow><span><IconElement name="FormatAlignRight" size="xs" /></span></Tooltip>
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-              </StackCol>
-            </Paper>
+              <StackRow sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1 }}>
+                <IconElement name="VisibilityOff" size="xs" color="#D97706" />
+                <TextElement size="xs" sx={{ color: "#92400E", fontSize: "0.7rem", fontWeight: FONT_WEIGHT.medium }}>
+                  Layer này đang ở chế độ Ẩn
+                </TextElement>
+              </StackRow>
+              <ButtonElement
+                variant="text"
+                size="small"
+                onClick={() => onUpdateLayer(selectedLayer.id, { isHidden: false })}
+                sx={{ fontSize: "0.68rem", p: 0, color: COLOR.gold.main, fontWeight: "bold" }}
+              >
+                Hiện lại
+              </ButtonElement>
+            </Box>
           )}
 
-          {/* 2. Màu sắc (nếu là Text) */}
+          {/* 2. Section: Typography (Text Layer) */}
           {isText && txtLayer && (
-            <Paper
-              elevation={0}
-              sx={{
-                p: SPACING.px16,
-                borderRadius: RADIUS.md,
-                border: `1px solid ${COLOR.borderGoldLight}`,
-                backgroundColor: COLOR.bgSecondary,
-              }}
-            >
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px12 }}>
-                🎨 Màu chữ & Bảng màu
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Văn Bản & Kiểu Chữ
               </TextElement>
 
-              {/* Swatches */}
-              <Grid container spacing={SPACING.px6} sx={{ mb: SPACING.px12 }}>
-                {PRESET_COLORS.map((item) => {
-                  const isSelected = txtLayer.fill?.toLowerCase() === item.hex.toLowerCase();
-                  return (
-                    <Grid size={{ xs: 2 }} key={item.hex}>
-                      <Tooltip title={item.label} arrow>
-                        <Box
-                          onClick={() => onUpdateLayer(txtLayer.id, { fill: item.hex })}
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: RADIUS.full,
-                            backgroundColor: item.hex,
-                            border: `1px solid ${COLOR.borderSubtle}`,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            boxShadow: isSelected ? `0 0 0 2px ${COLOR.bgSecondary}, 0 0 0 4px ${COLOR.gold.main}` : "none",
-                            transition: ANIMATION.sm,
-                            "&:hover": { transform: "scale(1.15)" },
-                          }}
-                        >
-                          {isSelected && (
-                            <Box
-                              sx={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: "50%",
-                                backgroundColor: item.hex === "#FFFFFF" || item.hex === "#FAF8F5" ? COLOR.textPrimary : COLOR.textInverse,
-                              }}
-                            />
-                          )}
-                        </Box>
-                      </Tooltip>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-
-              {/* Custom Color Input */}
+              {/* Quick Text Edit Input */}
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  backgroundColor: COLOR.bgPaper,
+                  width: "100%",
+                  boxSizing: "border-box",
+                  backgroundColor: COLOR.bgSecondary,
                   borderRadius: RADIUS.sm,
-                  border: `1px solid ${COLOR.borderSubtle}`,
-                  px: SPACING.px12,
-                  py: SPACING.px6,
-                  gap: SPACING.px8,
+                  border: `1px solid ${COLOR.borderGoldLight}`,
+                  p: SPACING.px8,
                   transition: ANIMATION.sm,
                   "&:focus-within": {
                     borderColor: COLOR.gold.main,
@@ -326,239 +390,882 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                   },
                 }}
               >
-                <Box
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: RADIUS.xs,
-                    backgroundColor: txtLayer.fill || "#B78628",
-                    border: `1px solid ${COLOR.borderSubtle}`,
-                    flexShrink: 0,
-                  }}
-                />
                 <input
                   type="text"
-                  value={txtLayer.fill || "#B78628"}
-                  onChange={(e) => onUpdateLayer(txtLayer.id, { fill: e.target.value })}
-                  placeholder="#B78628"
+                  value={txtLayer.text || ""}
+                  onChange={(e) =>
+                    onUpdateLayer(txtLayer.id, {
+                      text: e.target.value,
+                      name: e.target.value.slice(0, 18) || "Văn bản",
+                    })
+                  }
+                  placeholder="Nhập nội dung văn bản..."
                   style={{
+                    width: "100%",
                     border: "none",
                     outline: "none",
-                    width: "100%",
-                    fontSize: FONT_SIZE.xs,
-                    fontFamily: "monospace",
-                    fontWeight: FONT_WEIGHT.semibold,
-                    color: COLOR.textPrimary,
                     background: "transparent",
+                    fontSize: FONT_SIZE.xs,
+                    color: COLOR.textPrimary,
+                    fontWeight: FONT_WEIGHT.medium,
                   }}
                 />
-                <Tooltip title="Chọn từ bảng màu" arrow>
-                  <label style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-                    <IconElement name="ColorLens" size="xs" color={COLOR.gold.main} />
-                    <input
-                      type="color"
-                      value={txtLayer.fill?.startsWith("#") ? txtLayer.fill : "#B78628"}
-                      onChange={(e) => handleHexChange(e.target.value)}
-                      style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-                    />
-                  </label>
-                </Tooltip>
               </Box>
-            </Paper>
+
+              {/* Font Family Dropdown */}
+              <Select
+                fullWidth
+                size="small"
+                value={txtLayer.fontFamily || "'Playfair Display', serif"}
+                onChange={(e) => onUpdateLayer(txtLayer.id, { fontFamily: e.target.value })}
+                sx={{
+                  backgroundColor: COLOR.bgSecondary,
+                  fontSize: FONT_SIZE.xs,
+                  borderRadius: RADIUS.sm,
+                  height: 36,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: COLOR.borderGoldLight,
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: COLOR.gold.main,
+                  },
+                }}
+              >
+                {FONT_OPTIONS.map((f) => (
+                  <MenuItem key={f.value} value={f.value}>
+                    <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+                      <span style={{ fontFamily: f.value, fontSize: "0.85rem" }}>{f.label}</span>
+                      <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.65rem", ml: 1 }}>
+                        {f.category}
+                      </TextElement>
+                    </StackRowAlignJustBetween>
+                  </MenuItem>
+                ))}
+              </Select>
+
+              {/* Font Size Stepper & Bold / Italic */}
+              <StackRow sx={{ width: "100%", gap: SPACING.px8, alignItems: "center" }}>
+                <StackRow
+                  sx={{
+                    flex: 1,
+                    backgroundColor: COLOR.bgSecondary,
+                    borderRadius: RADIUS.sm,
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    alignItems: "center",
+                    px: SPACING.px4,
+                    height: 36,
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      onUpdateLayer(txtLayer.id, {
+                        fontSize: Math.max(10, (txtLayer.fontSize || 22) - 1),
+                      })
+                    }
+                    sx={{ p: 0.4, color: COLOR.textSecondary }}
+                  >
+                    <IconElement name="Remove" size="xs" />
+                  </IconButton>
+
+                  <TextElement
+                    size="xs"
+                    weight="bold"
+                    colorVariant="primary"
+                    sx={{ flex: 1, textAlign: "center", userSelect: "none" }}
+                  >
+                    {txtLayer.fontSize || 22}px
+                  </TextElement>
+
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      onUpdateLayer(txtLayer.id, {
+                        fontSize: Math.min(96, (txtLayer.fontSize || 22) + 1),
+                      })
+                    }
+                    sx={{ p: 0.4, color: COLOR.textSecondary }}
+                  >
+                    <IconElement name="Add" size="xs" />
+                  </IconButton>
+                </StackRow>
+
+                <ToggleButtonGroup
+                  size="small"
+                  sx={{
+                    backgroundColor: COLOR.bgSecondary,
+                    height: 36,
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: RADIUS.sm,
+                  }}
+                >
+                  <ToggleButton
+                    value="bold"
+                    selected={txtLayer.fontWeight === "bold" || txtLayer.fontWeight === "700"}
+                    onClick={() =>
+                      onUpdateLayer(txtLayer.id, {
+                        fontWeight:
+                          txtLayer.fontWeight === "bold" || txtLayer.fontWeight === "700"
+                            ? "normal"
+                            : "bold",
+                      })
+                    }
+                    sx={{ px: SPACING.px8, border: "none" }}
+                  >
+                    <Tooltip title="In đậm" arrow>
+                      <span>
+                        <IconElement name="FormatBold" size="xs" />
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+
+                  <ToggleButton
+                    value="italic"
+                    selected={txtLayer.fontStyle === "italic"}
+                    onClick={() =>
+                      onUpdateLayer(txtLayer.id, {
+                        fontStyle: txtLayer.fontStyle === "italic" ? "normal" : "italic",
+                      })
+                    }
+                    sx={{ px: SPACING.px8, border: "none" }}
+                  >
+                    <Tooltip title="In nghiêng" arrow>
+                      <span>
+                        <IconElement name="FormatItalic" size="xs" />
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </StackRow>
+
+              {/* Text Alignment */}
+              <ToggleButtonGroup
+                fullWidth
+                size="small"
+                value={txtLayer.textAlign || "center"}
+                exclusive
+                onChange={(_, val) => val && onUpdateLayer(txtLayer.id, { textAlign: val })}
+                sx={{
+                  width: "100%",
+                  backgroundColor: COLOR.bgSecondary,
+                  height: 34,
+                  border: `1px solid ${COLOR.borderGoldLight}`,
+                  borderRadius: RADIUS.sm,
+                }}
+              >
+                <ToggleButton value="left" sx={{ flex: 1, border: "none" }}>
+                  <Tooltip title="Căn trái" arrow>
+                    <span>
+                      <IconElement name="FormatAlignLeft" size="xs" />
+                    </span>
+                  </Tooltip>
+                </ToggleButton>
+                <ToggleButton value="center" sx={{ flex: 1, border: "none" }}>
+                  <Tooltip title="Căn giữa" arrow>
+                    <span>
+                      <IconElement name="FormatAlignCenter" size="xs" />
+                    </span>
+                  </Tooltip>
+                </ToggleButton>
+                <ToggleButton value="right" sx={{ flex: 1, border: "none" }}>
+                  <Tooltip title="Căn phải" arrow>
+                    <span>
+                      <IconElement name="FormatAlignRight" size="xs" />
+                    </span>
+                  </Tooltip>
+                </ToggleButton>
+                <ToggleButton value="justify" sx={{ flex: 1, border: "none" }}>
+                  <Tooltip title="Căn đều" arrow>
+                    <span>
+                      <IconElement name="FormatAlignJustify" size="xs" />
+                    </span>
+                  </Tooltip>
+                </ToggleButton>
+              </ToggleButtonGroup>
+
+              {/* Tracking & Line Height Card */}
+              <Box sx={SECTION_CARD_SX}>
+                <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+                  <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                    Dãn chữ (Tracking)
+                  </TextElement>
+                  <TextElement size="xs" weight="bold" colorVariant="gold">
+                    {txtLayer.letterSpacing !== undefined ? `${txtLayer.letterSpacing}px` : "0px"}
+                  </TextElement>
+                </StackRowAlignJustBetween>
+                <Slider
+                  size="small"
+                  min={-1}
+                  max={10}
+                  step={0.5}
+                  value={txtLayer.letterSpacing || 0}
+                  onChange={(_, val) => onUpdateLayer(txtLayer.id, { letterSpacing: val as number })}
+                  sx={{
+                    color: COLOR.gold.main,
+                    py: 0.5,
+                    "& .MuiSlider-thumb": { width: 14, height: 14 },
+                  }}
+                />
+
+                <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center", mt: SPACING.px4 }}>
+                  <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                    Dãn dòng (Line Height)
+                  </TextElement>
+                  <TextElement size="xs" weight="bold" colorVariant="gold">
+                    {txtLayer.lineHeight || 1.4}
+                  </TextElement>
+                </StackRowAlignJustBetween>
+                <Slider
+                  size="small"
+                  min={1}
+                  max={2.4}
+                  step={0.1}
+                  value={txtLayer.lineHeight || 1.4}
+                  onChange={(_, val) => onUpdateLayer(txtLayer.id, { lineHeight: val as number })}
+                  sx={{
+                    color: COLOR.gold.main,
+                    py: 0.5,
+                    "& .MuiSlider-thumb": { width: 14, height: 14 },
+                  }}
+                />
+              </Box>
+            </StackCol>
           )}
 
-          {/* 3. Hiệu ứng xuất hiện khi cuộn */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: SPACING.px16,
-              borderRadius: RADIUS.md,
-              border: `1px solid ${COLOR.borderGoldLight}`,
-              backgroundColor: COLOR.bgSecondary,
-            }}
-          >
-            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-              ✨ Hiệu ứng xuất hiện khi cuộn tới
+          {/* 3. Section: Image Specifics */}
+          {isImage && imgLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Thuộc Tính Hình Ảnh
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+                  <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                    Bo góc (Border Radius)
+                  </TextElement>
+                  <TextElement size="xs" weight="bold" colorVariant="gold">
+                    {imgLayer.borderRadius || 0}px
+                  </TextElement>
+                </StackRowAlignJustBetween>
+                <Slider
+                  size="small"
+                  min={0}
+                  max={60}
+                  value={imgLayer.borderRadius || 0}
+                  onChange={(_, val) => onUpdateLayer(imgLayer.id, { borderRadius: val as number })}
+                  sx={{ color: COLOR.gold.main, py: 0.5 }}
+                />
+              </Box>
+            </StackCol>
+          )}
+
+          {/* 4. Section: Shape Specifics */}
+          {isShape && shapeLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Hình Khối & Đường Nét
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+                  <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                    Độ dày nét viền (Stroke)
+                  </TextElement>
+                  <TextElement size="xs" weight="bold" colorVariant="gold">
+                    {shapeLayer.strokeWidth || 1}px
+                  </TextElement>
+                </StackRowAlignJustBetween>
+                <Slider
+                  size="small"
+                  min={0}
+                  max={12}
+                  step={0.5}
+                  value={shapeLayer.strokeWidth || 1}
+                  onChange={(_, val) => onUpdateLayer(shapeLayer.id, { strokeWidth: val as number })}
+                  sx={{ color: COLOR.gold.main, py: 0.5 }}
+                />
+              </Box>
+            </StackCol>
+          )}
+
+          {/* 5. Section: Color & Palette */}
+          {(isText || isShape) && (
+            <StackCol spacing={SPACING.px8} sx={{ width: "100%" }}>
+              <Divider sx={{ my: SPACING.px2, borderColor: COLOR.divider }} />
+              <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+                <TextElement
+                  size="xs"
+                  weight="bold"
+                  colorVariant="secondary"
+                  sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+                >
+                  {isText ? "Màu Chữ Hoàng Gia" : "Màu Nền Khối (Fill)"}
+                </TextElement>
+                {isShape && (
+                  <ButtonElement
+                    variant="text"
+                    size="small"
+                    onClick={() => onUpdateLayer(selectedLayer.id, { fill: "transparent" })}
+                    sx={{ fontSize: "0.68rem", py: 0, px: 0.5, color: COLOR.textSecondary }}
+                  >
+                    Trong suốt
+                  </ButtonElement>
+                )}
+              </StackRowAlignJustBetween>
+
+              {/* Luxury Palette Swatches: 2 rows of 5 circular chips */}
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(5, 1fr)",
+                  gap: SPACING.px8,
+                  justifyItems: "center",
+                  alignItems: "center",
+                  py: SPACING.px4,
+                }}
+              >
+                {LUXURY_PALETTE.map((item) => {
+                  const isSelected = currentFill.toLowerCase() === item.hex.toLowerCase();
+                  return (
+                    <Tooltip title={item.label} arrow key={item.hex}>
+                      <Box
+                        onClick={() => onUpdateLayer(selectedLayer.id, { fill: item.hex })}
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: RADIUS.full,
+                          backgroundColor: item.hex,
+                          border: `1px solid ${item.hex === "#FFFFFF" ? COLOR.borderSubtle : "transparent"}`,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: isSelected
+                            ? `0 0 0 2px ${COLOR.bgPaper}, 0 0 0 4px ${COLOR.gold.main}`
+                            : "0 1px 2px rgba(0,0,0,0.06)",
+                        }}
+                      >
+                        {isSelected && (
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: RADIUS.full,
+                              backgroundColor:
+                                item.hex === "#FFFFFF" ? COLOR.textPrimary : COLOR.textInverse,
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+              </Box>
+
+              {/* Custom Color Input */}
+              <StackRowAlignJustBetween
+                sx={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  backgroundColor: COLOR.bgSecondary,
+                  borderRadius: RADIUS.sm,
+                  border: `1px solid ${COLOR.borderGoldLight}`,
+                  px: SPACING.px8,
+                  py: SPACING.px4,
+                  alignItems: "center",
+                }}
+              >
+                <StackRow sx={{ gap: SPACING.px8, alignItems: "center", flex: 1, minWidth: 0 }}>
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: RADIUS.full,
+                      backgroundColor: currentFill,
+                      border: `1px solid ${COLOR.borderSubtle}`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={currentFill}
+                    onChange={(e) => onUpdateLayer(selectedLayer.id, { fill: e.target.value })}
+                    placeholder="#B78628"
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      width: "100%",
+                      fontSize: FONT_SIZE.xs,
+                      fontFamily: "monospace",
+                      fontWeight: FONT_WEIGHT.semibold,
+                      color: COLOR.textPrimary,
+                      background: "transparent",
+                    }}
+                  />
+                </StackRow>
+
+                <label
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "4px",
+                    flexShrink: 0,
+                  }}
+                >
+                  <IconElement name="ColorLens" size="xs" color={COLOR.gold.main} />
+                  <input
+                    type="color"
+                    value={currentFill.startsWith("#") ? currentFill : "#B78628"}
+                    onChange={(e) => onUpdateLayer(selectedLayer.id, { fill: e.target.value })}
+                    style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                  />
+                </label>
+              </StackRowAlignJustBetween>
+            </StackCol>
+          )}
+
+          {/* 6. Section: Opacity Slider */}
+          <Box sx={SECTION_CARD_SX}>
+            <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                Độ mờ đục (Opacity)
+              </TextElement>
+              <TextElement size="xs" weight="bold" colorVariant="gold">
+                {Math.round((selectedLayer.opacity ?? 1) * 100)}%
+              </TextElement>
+            </StackRowAlignJustBetween>
+            <Slider
+              size="small"
+              min={0.05}
+              max={1}
+              step={0.05}
+              value={selectedLayer.opacity ?? 1}
+              onChange={(_, val) => onUpdateLayer(selectedLayer.id, { opacity: val as number })}
+              sx={{
+                color: COLOR.gold.main,
+                py: 0.5,
+                "& .MuiSlider-thumb": { width: 14, height: 14 },
+              }}
+            />
+          </Box>
+
+          {/* 7. Section: Entrance Animation */}
+          <Divider sx={{ my: SPACING.px2, borderColor: COLOR.divider }} />
+          <StackCol spacing={SPACING.px8} sx={{ width: "100%" }}>
+            <TextElement
+              size="xs"
+              weight="bold"
+              colorVariant="secondary"
+              sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+            >
+              Hiệu Ứng Xuất Hiện
             </TextElement>
+
             <Select
               fullWidth
               size="small"
               value={selectedLayer.animation || "fade-in"}
-              onChange={(e) => onUpdateLayer(selectedLayer.id, { animation: e.target.value as any })}
-              sx={{ backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.sm, borderRadius: RADIUS.sm }}
+              onChange={(e) =>
+                onUpdateLayer(selectedLayer.id, {
+                  animation: e.target.value as CanvasElementAnimationType,
+                })
+              }
+              sx={{
+                backgroundColor: COLOR.bgSecondary,
+                fontSize: FONT_SIZE.xs,
+                borderRadius: RADIUS.sm,
+                height: 36,
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: COLOR.borderGoldLight,
+                },
+              }}
             >
-              <MenuItem value="none">Không hiệu ứng (Tĩnh)</MenuItem>
-              <MenuItem value="fade-in">Hiện mờ ảo nhẹ nhàng (Fade In)</MenuItem>
-              <MenuItem value="slide-up">Trượt êm từ dưới lên (Slide Up)</MenuItem>
-              <MenuItem value="zoom-in">Phóng to nhẹ trang trọng (Zoom In)</MenuItem>
+              {ANIMATION_OPTIONS.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center" }}>
+                    <IconElement name={opt.icon} size="xs" color={COLOR.gold.main} />
+                    <span style={{ fontSize: "0.8rem" }}>{opt.label}</span>
+                  </StackRowAlignJustStart>
+                </MenuItem>
+              ))}
             </Select>
-          </Paper>
 
-          {/* 4. Thứ tự lớp */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: SPACING.px16,
-              borderRadius: RADIUS.md,
-              border: `1px solid ${COLOR.borderGoldLight}`,
-              backgroundColor: COLOR.bgSecondary,
-            }}
-          >
-            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-              📑 Thứ tự lớp & Hiển thị
+            {/* Delay Chips */}
+            <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center", mt: SPACING.px2 }}>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                Độ trễ (Delay):
+              </TextElement>
+              <StackRow sx={{ gap: SPACING.px6 }}>
+                {[0, 0.3, 0.6, 1].map((delay) => {
+                  const isSelected = (selectedLayer.animationDelay || 0) === delay;
+                  return (
+                    <Box
+                      key={delay}
+                      onClick={() => onUpdateLayer(selectedLayer.id, { animationDelay: delay })}
+                      sx={{
+                        px: SPACING.px8,
+                        py: SPACING.px2,
+                        borderRadius: RADIUS.xs,
+                        fontSize: "0.7rem",
+                        fontWeight: FONT_WEIGHT.bold,
+                        cursor: "pointer",
+                        backgroundColor: isSelected ? COLOR.gold.main : COLOR.bgSecondary,
+                        color: isSelected ? COLOR.textInverse : COLOR.textSecondary,
+                        border: `1px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                        transition: ANIMATION.sm,
+                        "&:hover": { borderColor: COLOR.gold.main },
+                      }}
+                    >
+                      {delay}s
+                    </Box>
+                  );
+                })}
+              </StackRow>
+            </StackRowAlignJustBetween>
+          </StackCol>
+
+          {/* 8. Section: Layer Arrangement (Bố trí & Thứ tự tầng) */}
+          <Divider sx={{ my: SPACING.px2, borderColor: COLOR.divider }} />
+          <StackCol spacing={SPACING.px8} sx={{ width: "100%" }}>
+            <TextElement
+              size="xs"
+              weight="bold"
+              colorVariant="secondary"
+              sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+            >
+              Bố Trí & Thứ Tự Tầng
             </TextElement>
-            <StackRowAlignJustBetween sx={{ gap: SPACING.px8 }}>
+
+            {/* Row 1: Căn giữa trang */}
+            <ButtonElement
+              variant="outline"
+              size="small"
+              rounded="sm"
+              onClick={handleCenterAlignHorizontal}
+              leftIcon={<IconElement name="AlignHorizontalCenter" size="xs" />}
+              sx={{
+                width: "100%",
+                backgroundColor: COLOR.bgSecondary,
+                borderColor: COLOR.borderGoldLight,
+                fontSize: "0.75rem",
+                py: 0.6,
+              }}
+            >
+              Căn Giữa Trang
+            </ButtonElement>
+
+            {/* Row 2: Lên trên / Xuống dưới 2 cột cân đối */}
+            <StackRow sx={{ width: "100%", gap: SPACING.px8 }}>
               <ButtonElement
                 variant="outline"
                 size="small"
-                rounded="md"
+                rounded="sm"
                 onClick={() => onBringForward(selectedLayer.id)}
                 leftIcon={<IconElement name="ArrowUpward" size="xs" />}
-                sx={{ flex: 1, backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.xs }}
+                sx={{
+                  flex: 1,
+                  backgroundColor: COLOR.bgSecondary,
+                  borderColor: COLOR.borderGoldLight,
+                  fontSize: "0.75rem",
+                  py: 0.6,
+                }}
               >
-                Lên 1 Lớp
+                Lên Trên
               </ButtonElement>
+
               <ButtonElement
                 variant="outline"
                 size="small"
-                rounded="md"
+                rounded="sm"
                 onClick={() => onSendBackward(selectedLayer.id)}
                 leftIcon={<IconElement name="ArrowDownward" size="xs" />}
-                sx={{ flex: 1, backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.xs }}
+                sx={{
+                  flex: 1,
+                  backgroundColor: COLOR.bgSecondary,
+                  borderColor: COLOR.borderGoldLight,
+                  fontSize: "0.75rem",
+                  py: 0.6,
+                }}
               >
-                Xuống 1 Lớp
+                Xuống Dưới
               </ButtonElement>
-            </StackRowAlignJustBetween>
-          </Paper>
+            </StackRow>
+          </StackCol>
 
-          {/* Bỏ chọn */}
+          {/* Deselect Button */}
           <ButtonElement
             variant="text"
             size="small"
             onClick={onDeselect}
             leftIcon={<IconElement name="Close" size="xs" />}
-            sx={{ color: COLOR.textSecondary }}
+            sx={{
+              width: "100%",
+              color: COLOR.textSecondary,
+              fontSize: "0.75rem",
+              mt: SPACING.px4,
+              "&:hover": { color: COLOR.textPrimary },
+            }}
           >
-            Bỏ chọn đối tượng
+            Bỏ chọn layer
           </ButtonElement>
         </StackCol>
       ) : (
-        /* Unselected State: Document Level Settings */
-        <StackCol spacing={SPACING.px20}>
-          <Box>
-            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-              CÀI ĐẶT THIỆP CƯỚI
-            </HeadingElement>
-            <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-              Tùy chỉnh kích thước & màu nền tổng thể.
-            </TextElement>
-          </Box>
-
-          {/* Hướng dẫn nhanh */}
-          <Paper
-            elevation={0}
+        /* Unselected State: Document Settings (Cài đặt trang thiệp) */
+        <StackCol spacing={SPACING.px16} sx={{ width: "100%" }}>
+          {/* Header */}
+          <StackRowAlignJustStart
             sx={{
-              p: SPACING.px12,
-              borderRadius: RADIUS.md,
-              backgroundColor: `${COLOR.gold.main}10`,
-              border: `1px solid ${COLOR.borderGoldLight}`,
+              width: "100%",
+              pb: SPACING.px12,
+              borderBottom: `1px solid ${COLOR.divider}`,
+              gap: SPACING.px8,
+              alignItems: "center",
             }}
           >
-            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ mb: SPACING.px4 }}>
-              💡 Mẹo thiết kế nhanh:
-            </TextElement>
-            <TextElement size="xs" colorVariant="secondary" sx={{ lineHeight: 1.5 }}>
-              • Nhấp trực tiếp vào bất kỳ dòng chữ, ảnh cưới hoặc họa tiết trên thiệp ở giữa để kéo thả và chỉnh sửa.
-              <br />
-              • Dùng thanh công cụ bên trái để thêm ảnh cưới, lời chúc hoặc đổi hiệu ứng mở thiệp 3D.
-            </TextElement>
-          </Paper>
+            <StackCenter
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: RADIUS.sm,
+                backgroundColor: COLOR.gold[50],
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                color: COLOR.gold.main,
+              }}
+            >
+              <IconElement name="Settings" size="xs" />
+            </StackCenter>
+            <StackCol spacing={0}>
+              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+                CÀI ĐẶT THIỆP
+              </HeadingElement>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.7rem" }}>
+                Thiết lập hiệu ứng & nền tổng thể
+              </TextElement>
+            </StackCol>
+          </StackRowAlignJustStart>
 
-          {/* Kích thước & Chiều dài thiệp */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: SPACING.px16,
-              borderRadius: RADIUS.md,
-              border: `1px solid ${COLOR.borderGoldLight}`,
-              backgroundColor: COLOR.bgSecondary,
-            }}
-          >
-            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px4 }}>
-              📐 Kích thước & Độ dài thiệp
-            </TextElement>
-            <TextElement size="xs" colorVariant="secondary" sx={{ mb: SPACING.px8 }}>
-              Rộng 390px (Chuẩn Mobile) × Dài {canvasHeight}px
-            </TextElement>
+          {/* 1. Kích thước & Độ dài thiệp */}
+          <Box sx={SECTION_CARD_SX}>
+            <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+              >
+                Độ dài thiệp
+              </TextElement>
+              <TextElement size="xs" colorVariant="gold" weight="bold">
+                390 × {canvasHeight}px
+              </TextElement>
+            </StackRowAlignJustBetween>
 
-            <StackRowAlignJustBetween sx={{ gap: SPACING.px8 }}>
+            <StackRow sx={{ width: "100%", gap: SPACING.px8, mt: SPACING.px4 }}>
               <ButtonElement
                 variant="outline"
                 size="small"
-                rounded="md"
+                rounded="sm"
                 onClick={() => onExpandHeight(300)}
                 leftIcon={<IconElement name="Add" size="xs" />}
-                sx={{ flex: 1, backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.xs }}
+                sx={{
+                  flex: 1,
+                  backgroundColor: COLOR.bgPaper,
+                  borderColor: COLOR.borderGoldLight,
+                  fontSize: FONT_SIZE.xs,
+                  py: 0.6,
+                }}
               >
-                + Kéo Dài (+300px)
+                Kéo Dài (+300)
               </ButtonElement>
               {canvasHeight > 780 && (
                 <ButtonElement
                   variant="outline"
                   size="small"
-                  rounded="md"
+                  rounded="sm"
                   onClick={() => onExpandHeight(-300)}
                   leftIcon={<IconElement name="Remove" size="xs" />}
-                  sx={{ flex: 1, backgroundColor: COLOR.bgPaper, fontSize: FONT_SIZE.xs }}
+                  sx={{
+                    flex: 1,
+                    backgroundColor: COLOR.bgPaper,
+                    borderColor: COLOR.borderGoldLight,
+                    fontSize: FONT_SIZE.xs,
+                    py: 0.6,
+                  }}
                 >
-                  - Thu Gọn (-300px)
+                  Thu Gọn
                 </ButtonElement>
               )}
-            </StackRowAlignJustBetween>
-          </Paper>
+            </StackRow>
+          </Box>
 
-          {/* Màu nền tổng thể */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: SPACING.px16,
-              borderRadius: RADIUS.md,
-              border: `1px solid ${COLOR.borderGoldLight}`,
-              backgroundColor: COLOR.bgSecondary,
-            }}
-          >
-            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-              🎨 Tông màu nền thiệp
+          {/* 2. Tông màu nền thiệp */}
+          <Box sx={SECTION_CARD_SX}>
+            <TextElement
+              size="xs"
+              weight="bold"
+              colorVariant="secondary"
+              sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+            >
+              Tông màu nền thiệp
             </TextElement>
-            <Grid container spacing={SPACING.px8}>
-              {BG_PALETTES.map((bg) => (
-                <Grid size={{ xs: 6 }} key={bg.color}>
-                  <Paper
-                    elevation={0}
+
+            <Box
+              sx={{
+                width: "100%",
+                boxSizing: "border-box",
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: SPACING.px6,
+              }}
+            >
+              {BG_PALETTES.map((bg) => {
+                const isSelected = canvasBg === bg.color;
+                return (
+                  <Box
+                    key={bg.color}
                     onClick={() => onSetBackground(bg.color)}
                     sx={{
-                      p: SPACING.px8,
+                      p: "6px 8px",
+                      boxSizing: "border-box",
+                      minWidth: 0,
                       borderRadius: RADIUS.sm,
-                      border: `2px solid ${canvasBg === bg.color ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                      border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
                       backgroundColor: bg.color,
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: SPACING.px6,
-                      boxShadow: canvasBg === bg.color ? SHADOW.sm : "none",
                       transition: ANIMATION.sm,
-                      "&:hover": { transform: "scale(1.03)" },
+                      boxShadow: isSelected ? `0 0 0 2px ${COLOR.gold.light}44` : "none",
+                      "&:hover": { borderColor: COLOR.gold.main },
                     }}
                   >
-                    <Box sx={{ width: 14, height: 14, borderRadius: RADIUS.full, backgroundColor: bg.border, flexShrink: 0 }} />
-                    <TextElement size="xs" weight="semibold" sx={{ fontSize: FONT_SIZE.xs, color: bg.color === "#3B1117" ? COLOR.textInverse : COLOR.textPrimary, whiteSpace: "nowrap" }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: RADIUS.full,
+                        backgroundColor: bg.border,
+                        flexShrink: 0,
+                        border: `1px solid ${COLOR.borderSubtle}`,
+                      }}
+                    />
+                    <TextElement
+                      size="xs"
+                      weight="semibold"
+                      sx={{
+                        fontSize: "0.68rem",
+                        color: bg.darkText ? COLOR.textPrimary : COLOR.textInverse,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        minWidth: 0,
+                        flex: 1,
+                      }}
+                    >
                       {bg.name}
                     </TextElement>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+
+          {/* 3. Hiệu ứng mở thiệp (Opening Effect) */}
+          {onSetOpeningEffect && (
+            <Box sx={SECTION_CARD_SX}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+              >
+                Hiệu ứng mở bao thư
+              </TextElement>
+              <Select
+                fullWidth
+                size="small"
+                value={openingEffect}
+                onChange={(e) => onSetOpeningEffect(e.target.value as CanvasOpeningEffectType)}
+                sx={{
+                  backgroundColor: COLOR.bgPaper,
+                  fontSize: FONT_SIZE.xs,
+                  borderRadius: RADIUS.sm,
+                  height: 36,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: COLOR.borderGoldLight,
+                  },
+                }}
+              >
+                {OPENING_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <StackCol spacing={0}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{opt.label}</span>
+                      <span style={{ fontSize: "0.68rem", color: COLOR.textSecondary }}>
+                        {opt.desc}
+                      </span>
+                    </StackCol>
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          )}
+
+          {/* 4. Hiệu ứng hạt rơi (Ambient Particle) */}
+          {onSetAmbientParticle && (
+            <Box sx={SECTION_CARD_SX}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+              >
+                Hiệu ứng hạt rơi (Particle)
+              </TextElement>
+              <Select
+                fullWidth
+                size="small"
+                value={ambientParticle}
+                onChange={(e) =>
+                  onSetAmbientParticle(e.target.value as CanvasAmbientParticleType)
+                }
+                sx={{
+                  backgroundColor: COLOR.bgPaper,
+                  fontSize: FONT_SIZE.xs,
+                  borderRadius: RADIUS.sm,
+                  height: 36,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: COLOR.borderGoldLight,
+                  },
+                }}
+              >
+                {PARTICLE_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <StackCol spacing={0}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{opt.label}</span>
+                      <span style={{ fontSize: "0.68rem", color: COLOR.textSecondary }}>
+                        {opt.desc}
+                      </span>
+                    </StackCol>
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          )}
         </StackCol>
       )}
     </Box>

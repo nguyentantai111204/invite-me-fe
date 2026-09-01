@@ -36,8 +36,23 @@ export default function PublicInvitationPage({ params, searchParams }: IPublicIn
       if (savedDoc) {
         try {
           const parsed = JSON.parse(savedDoc) as ICanvasDocument;
-          setCanvasDoc(parsed);
-          return;
+          if (parsed && Array.isArray(parsed.layers)) {
+            const sanitized = {
+              ...parsed,
+              layers: parsed.layers.map((l: any) => {
+                if (
+                  (l.id === "layer-border-outer" || l.id === "layer-border-inner") &&
+                  l.fill &&
+                  l.fill !== "transparent"
+                ) {
+                  return { ...l, fill: "transparent" };
+                }
+                return l;
+              }),
+            };
+            setCanvasDoc(sanitized);
+            return;
+          }
         } catch {
           // Fallback to preset
         }

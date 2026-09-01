@@ -1,126 +1,158 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Grid, Chip, Divider, Tooltip } from "@mui/material";
+import { Box, Chip, Divider, Tooltip, IconButton } from "@mui/material";
 import {
+  ICanvasLayer,
+  ICanvasTextLayer,
   CanvasOpeningEffectType,
   CanvasAmbientParticleType,
 } from "@/interfaces/canvas-editor.interface";
 import {
   COLOR,
   RADIUS,
-  SHADOW,
   FONT_SIZE,
   FONT_WEIGHT,
   SPACING,
   ANIMATION,
 } from "@/constants/style.constant";
 import {
-  CARD_ITEM_SX,
-  SELECTABLE_ITEM_SX,
-  PANEL_RAIL_SX,
-  PANEL_CONTENT_SX,
-} from "../editor.styles";
-import {
   HeadingElement,
   TextElement,
   ButtonElement,
   IconElement,
+  IconName,
   StackCenter,
   StackCol,
-  StackRowAlignJustCenter,
+  StackRow,
   StackRowAlignJustBetween,
+  StackRowAlignJustStart,
 } from "@/components/shared";
 
 interface ICanvasAssetsDrawerProps {
+  layers?: ICanvasLayer[];
+  selectedId?: string | null;
   openingEffect?: CanvasOpeningEffectType;
   ambientParticle?: CanvasAmbientParticleType;
+  onSelectLayer?: (id: string | null) => void;
+  onUpdateLayer?: (id: string, updates: Partial<ICanvasLayer>) => void;
+  onDeleteLayer?: (id: string) => void;
+  onDuplicateLayer?: (id: string) => void;
+  onBringForward?: (id: string) => void;
+  onSendBackward?: (id: string) => void;
   onSetOpeningEffect?: (effect: CanvasOpeningEffectType) => void;
   onSetAmbientParticle?: (particle: CanvasAmbientParticleType) => void;
-  onAddText: (preset?: { text: string; fontSize: number; fontFamily: string; fontWeight?: "bold" | "normal"; fill?: string; fontStyle?: "normal" | "italic" }) => void;
+  onAddText: (preset?: {
+    text: string;
+    fontSize: number;
+    fontFamily: string;
+    fontWeight?: "bold" | "normal";
+    fill?: string;
+    fontStyle?: "normal" | "italic";
+  }) => void;
   onAddSticker: (emoji: string, size?: number) => void;
   onAddShape: (type: "rect" | "circle" | "divider") => void;
   onAddImage: (src: string) => void;
   onSetBackground: (color: string) => void;
 }
 
-type TabType = "text" | "stickers" | "effects" | "shapes" | "uploads" | "backgrounds";
+type TabType = "layers" | "text" | "stickers" | "effects" | "shapes" | "uploads" | "backgrounds";
 
-// Navigation tabs
-const NAV_ITEMS: { id: TabType; label: string; icon: Parameters<typeof IconElement>[0]["name"]; tip: string }[] = [
-  { id: "text",        label: "Mẫu Chữ",   icon: "TextFormat",   tip: "Chèn tiêu đề, lời mời, ngày cưới" },
-  { id: "stickers",   label: "Họa Tiết",   icon: "Favorite",     tip: "Sticker hoa lá, nhẫn cưới, biểu tượng" },
-  { id: "effects",    label: "Hiệu Ứng",   icon: "AutoAwesome",  tip: "Hiệu ứng mở bìa 3D & mưa hoa/bụi vàng" },
-  { id: "shapes",     label: "Khung Hình", icon: "Crop",         tip: "Khung chân dung, khung viền, dải phân cách" },
-  { id: "uploads",    label: "Tải Ảnh",    icon: "CloudUpload",  tip: "Tải ảnh cưới của bạn hoặc chọn ảnh mẫu" },
-  { id: "backgrounds",label: "Màu Nền",    icon: "Palette",      tip: "Tông màu nền thiệp sang trọng & mã HEX" },
+const NAV_ITEMS: { id: TabType; label: string; icon: IconName; tip: string }[] = [
+  { id: "layers", label: "Layers", icon: "Layers", tip: "Xem & quản lý tất cả các phần tử trên thiệp" },
+  { id: "text", label: "Mẫu Chữ", icon: "TextFormat", tip: "Chèn tiêu đề, lời mời, ngày cưới" },
+  { id: "stickers", label: "Họa Tiết", icon: "Favorite", tip: "Sticker hoa lá, nhẫn cưới" },
+  { id: "effects", label: "Hiệu Ứng", icon: "AutoAwesome", tip: "Hiệu ứng mở 3D & hạt rơi" },
+  { id: "shapes", label: "Khung Hình", icon: "Crop", tip: "Khung chân dung, dải phân cách" },
+  { id: "uploads", label: "Tải Ảnh", icon: "CloudUpload", tip: "Tải ảnh cưới từ thiết bị" },
+  { id: "backgrounds", label: "Màu Nền", icon: "Palette", tip: "Tông màu nền thiệp sang trọng" },
 ];
 
 const STICKER_CATEGORIES = [
-  { id: "floral",  label: "Hoa lá & Cành",   emojis: ["🌸","🌹","🌺","🌷","🌼","🌿","🍃","💐","🥀","🌾","🌻","🏵️"] },
-  { id: "rings",   label: "Nhẫn & Tình Yêu", emojis: ["💍","💖","💗","🕊️","💌","🥂","🍾","🎂"] },
-  { id: "badges",  label: "Vương Miện & Sao", emojis: ["⚜️","👑","✨","💎","🌟","💫","🎆","🎇"] },
+  { id: "floral", label: "Hoa lá", emojis: ["🌸", "🌹", "🌺", "🌷", "🌼", "🌿", "🍃", "💐", "🥀", "🌾", "🌻", "🏵️"] },
+  { id: "rings", label: "Nhẫn & Tim", emojis: ["💍", "💖", "💗", "🕊️", "💌", "🥂", "🍾", "🎂"] },
+  { id: "badges", label: "Hoàng Gia", emojis: ["⚜️", "👑", "✨", "💎", "🌟", "💫", "🎆", "🎇"] },
 ] as const;
 
 const TEXT_PRESETS = [
-  { icon: "💍", tag: "Tiêu đề chính", label: "LỄ THÀNH HÔN",           size: 16, font: "'Playfair Display', serif", weight: "bold"   as const, fill: COLOR.gold.main },
-  { icon: "✍️", tag: "Dòng nghệ thuật", label: "Save The Date",       size: 20, font: "'Great Vibes', cursive",     weight: "normal" as const, fill: COLOR.textPrimary },
-  { icon: "💬", tag: "Tên cặp đôi",     label: "Minh Quân & Thanh Trúc", size: 24, font: "'Playfair Display', serif", weight: "bold"   as const, fill: COLOR.textPrimary },
-  { icon: "📅", tag: "Thời gian",       label: "CHỦ NHẬT • 20.11.2026", size: 14, font: "Inter, sans-serif",          weight: "bold"   as const, fill: COLOR.gold.main },
-  { icon: "📍", tag: "Địa điểm tiệc",   label: "Park Hyatt Saigon • TP.HCM", size: 13, font: "Inter, sans-serif",    weight: "normal" as const, fill: COLOR.textSecondary },
+  {
+    category: "Tiêu đề lớn",
+    label: "LỄ THÀNH HÔN",
+    size: 18,
+    font: "'Playfair Display', serif",
+    weight: "bold" as const,
+    fill: COLOR.gold.main,
+  },
+  {
+    category: "Chữ uốn lượn",
+    label: "Save The Date",
+    size: 22,
+    font: "'Great Vibes', cursive",
+    weight: "regular" as const,
+    fill: COLOR.textPrimary,
+  },
+  {
+    category: "Tên cặp đôi",
+    label: "Minh Quân & Thanh Trúc",
+    size: 20,
+    font: "'Playfair Display', serif",
+    weight: "bold" as const,
+    fill: COLOR.textPrimary,
+  },
+  {
+    category: "Ngày tháng cưới",
+    label: "CHỦ NHẬT • 20.11.2026",
+    size: 13,
+    font: "Inter, sans-serif",
+    weight: "bold" as const,
+    fill: COLOR.gold.main,
+  },
+  {
+    category: "Địa điểm tiệc",
+    label: "Trung Tâm Tiệc Cưới Park Hyatt",
+    size: 13,
+    font: "Inter, sans-serif",
+    weight: "regular" as const,
+    fill: COLOR.textSecondary,
+  },
 ];
 
-const OPENING_EFFECTS: { id: CanvasOpeningEffectType; icon: string; title: string; desc: string; badge: string }[] = [
-  { id: "envelope-3d", icon: "💌", title: "Mở Phong Bì Hoàng Gia 3D", desc: "Mở con dấu sáp niêm phong, thiệp trượt êm ra ngoài", badge: "Phổ biến nhất" },
-  { id: "gate-fold",   icon: "✨", title: "Cánh Cổng Hoàng Kim 3D",   desc: "Hai cánh cửa vàng son mở sang 2 bên như cung điện", badge: "Sang trọng" },
-  { id: "scroll",      icon: "📜", title: "Cuộn Thư Hoàng Cung",      desc: "Trục thư cổ điển tự động mở rộng theo phương dọc", badge: "Cổ điển" },
-  { id: "fade",        icon: "💫", title: "Màn Mờ Ảo Tinh Tế",        desc: "Chuyển cảnh mượt mà, phù hợp thiệp phong cách tối giản", badge: "Nhẹ nhàng" },
+const OPENING_EFFECTS: { id: CanvasOpeningEffectType; icon: string; title: string; desc: string }[] = [
+  { id: "envelope-3d", icon: "💌", title: "Mở Phong Bì 3D", desc: "Mở con dấu sáp niêm phong, trượt thiệp ra ngoài" },
+  { id: "gate-fold", icon: "✨", title: "Cánh Cổng Hoàng Kim 3D", desc: "Hai cánh cửa vàng mở sang hai bên" },
+  { id: "scroll", icon: "📜", title: "Cuộn Thư Hoàng Cung", desc: "Trục thư tự động mở dọc trang trọng" },
+  { id: "fade", icon: "💫", title: "Màn Mờ Ảo Tinh Tế", desc: "Hiện dần nhẹ nhàng, phong cách tối giản" },
 ];
 
-const AMBIENT_PARTICLES: { id: CanvasAmbientParticleType; icon: string; label: string; desc: string }[] = [
-  { id: "sakura",    icon: "🌸", label: "Mưa Hoa Đào",    desc: "Cánh hoa đào rơi nhẹ nhàng lãng mạn" },
-  { id: "gold-dust", icon: "✨", label: "Bụi Kim Tuyến",  desc: "Hạt vàng lấp lánh sang trọng" },
-  { id: "hearts",    icon: "💖", label: "Trái Tim Bay",   desc: "Bong bóng trái tim ấm áp" },
-  { id: "snow",      icon: "❄️", label: "Tuyết Cổ Tích",  desc: "Bông tuyết trắng tinh khôi" },
-  { id: "none",      icon: "🚫", label: "Tắt Hiệu Ứng",   desc: "Giữ thiệp tĩnh, không chuyển động" },
+const AMBIENT_PARTICLES: { id: CanvasAmbientParticleType; icon: string; label: string }[] = [
+  { id: "sakura", icon: "🌸", label: "Mưa Hoa Đào" },
+  { id: "gold-dust", icon: "✨", label: "Bụi Kim Tuyến" },
+  { id: "hearts", icon: "💖", label: "Trái Tim Bay" },
+  { id: "snow", icon: "❄️", label: "Tuyết Cổ Tích" },
+  { id: "none", icon: "🚫", label: "Tắt Hiệu Ứng" },
 ];
 
 const BG_PRESETS = [
-  { name: "Trắng Hoàng Kim",    color: "#FFFFFF", border: "#C59B4B", dot: "#B78628", desc: "Tinh khôi, quyền quý" },
-  { name: "Kem Ngọc Trai",      color: "#FCFAF6", border: "#E0D1B9", dot: "#D4AF37", desc: "Ấm áp, trang nhã" },
-  { name: "Hồng Pastel",        color: "#FFF8F7", border: "#E58B7B", dot: "#DE7C66", desc: "Ngọt ngào, trẻ trung" },
-  { name: "Nhung Đỏ Cổ Điển",   color: "#3B1117", border: "#8B1E2B", dot: "#8B1E2B", desc: "Truyền thống, may mắn" },
-  { name: "Đêm Gala Tinh Tú",   color: "#161B26", border: "#3A4D6B", dot: "#3A4D6B", desc: "Huyền bí, hiện đại" },
-  { name: "Xanh Rêu Vintage",   color: "#F5F8F5", border: "#6B8E6B", dot: "#6B8E6B", desc: "Tươi mát, tự nhiên" },
-  { name: "Nâu Đất Quý Tộc",    color: "#2C211A", border: "#78350F", dot: "#78350F", desc: "Trầm ấm, cổ điển" },
-  { name: "Tím Hoàng Gia",      color: "#281E32", border: "#6B21A8", dot: "#6B21A8", desc: "Chung thủy, quý phái" },
+  { name: "Trắng Hoàng Kim", color: "#FFFFFF", dot: "#B78628", desc: "Tinh khiết & Quý phái" },
+  { name: "Kem Ngọc Trai", color: "#FCFAF6", dot: "#D4AF37", desc: "Ấm áp & Sang trọng" },
+  { name: "Hồng Pastel", color: "#FFF8F7", dot: "#DE7C66", desc: "Ngọt ngào lãng mạn" },
+  { name: "Nhung Đỏ Cổ Điển", color: "#3B1117", dot: "#8B1E2B", desc: "May mắn truyền thống" },
+  { name: "Đêm Gala Tinh Tú", color: "#161B26", dot: "#3A4D6B", desc: "Huyền bí & Đẳng cấp" },
+  { name: "Xanh Rêu Vintage", color: "#F5F8F5", dot: "#6B8E6B", desc: "Tươi mới & Tinh tế" },
+  { name: "Nâu Đất Quý Tộc", color: "#2C211A", dot: "#78350F", desc: "Cổ điển trầm ấm" },
+  { name: "Tím Hoàng Gia", color: "#281E32", dot: "#6B21A8", desc: "Chung thủy hoàng tộc" },
 ];
 
-const DARK_BG_COLORS = new Set(["#3B1117", "#161B26", "#2C211A", "#281E32"]);
-
-// Shared UI constants
-const STICKER_CELL_SX = {
-  ...CARD_ITEM_SX,
-  height: 52,
-  fontSize: "1.6rem",
-  "&:hover": {
-    ...CARD_ITEM_SX["&:hover"],
-    transform: "scale(1.15)",
-    boxShadow: SHADOW.sm,
-  },
-} as const;
-
-const LIST_ROW_SX = {
-  ...CARD_ITEM_SX,
-  display: "flex",
-  alignItems: "center",
-  gap: SPACING.px12,
-  p: SPACING.px12,
-} as const;
-
 export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
+  layers = [],
+  selectedId,
   openingEffect = "envelope-3d",
   ambientParticle = "sakura",
+  onSelectLayer,
+  onUpdateLayer,
+  onDeleteLayer,
+  onBringForward,
+  onSendBackward,
   onSetOpeningEffect,
   onSetAmbientParticle,
   onAddText,
@@ -129,7 +161,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
   onAddImage,
   onSetBackground,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("effects");
+  const [activeTab, setActiveTab] = useState<TabType>("layers");
   const [stickerFilter, setStickerFilter] = useState<"all" | "floral" | "rings" | "badges">("all");
   const [customBgHex, setCustomBgHex] = useState<string>(COLOR.bgPrimary);
 
@@ -150,9 +182,32 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100%", backgroundColor: COLOR.bgPaper, zIndex: 20 }}>
+    <Box
+      data-tour="assets-drawer"
+      sx={{
+        display: "flex",
+        height: "100%",
+        backgroundColor: COLOR.bgPaper,
+        borderRight: `1px solid ${COLOR.borderGoldLight}`,
+        zIndex: 20,
+        flexShrink: 0,
+      }}
+    >
       {/* ── Tier 1: Slim Vertical Icon Rail ── */}
-      <Box sx={{ ...PANEL_RAIL_SX, width: 78 }}>
+      <Box
+        sx={{
+          width: 72,
+          height: "100%",
+          backgroundColor: COLOR.bgSecondary,
+          borderRight: `1px solid ${COLOR.borderGoldLight}`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          py: SPACING.px12,
+          gap: SPACING.px6,
+          flexShrink: 0,
+        }}
+      >
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -160,19 +215,17 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
               <StackCenter
                 onClick={() => setActiveTab(item.id)}
                 sx={{
-                  width: 66,
-                  minHeight: 62,
+                  width: 60,
+                  height: 54,
                   flexDirection: "column",
                   borderRadius: RADIUS.md,
                   cursor: "pointer",
                   backgroundColor: isActive ? COLOR.bgPaper : "transparent",
                   color: isActive ? COLOR.gold.main : COLOR.textTertiary,
-                  boxShadow: isActive ? `0 2px 8px rgba(0,0,0,0.06)` : "none",
-                  border: isActive ? `1.5px solid ${COLOR.gold.light}` : "1px solid transparent",
+                  border: `1.5px solid ${isActive ? COLOR.gold.main : "transparent"}`,
                   transition: ANIMATION.sm,
-                  p: SPACING.px6,
                   "&:hover": {
-                    backgroundColor: isActive ? COLOR.bgPaper : COLOR.bgTertiary,
+                    borderColor: COLOR.gold.main,
                     color: COLOR.gold.main,
                   },
                 }}
@@ -182,12 +235,11 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                   size="xs"
                   weight={isActive ? "bold" : "medium"}
                   sx={{
-                    fontSize: FONT_SIZE.xs,
-                    mt: SPACING.px4,
+                    fontSize: "0.65rem",
+                    mt: "2px",
                     color: "inherit",
                     whiteSpace: "nowrap",
                     textAlign: "center",
-                    lineHeight: 1.2,
                   }}
                 >
                   {item.label}
@@ -198,446 +250,843 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
         })}
       </Box>
 
-      {/* ── Tier 2: Wide Asset Content Panel ── */}
+      {/* ── Tier 2: Wide Content Panel ── */}
       <Box
         sx={{
-          ...PANEL_CONTENT_SX,
-          width: { xs: 280, sm: 330 },
-          p: SPACING.px20,
+          width: 300,
+          height: "100%",
+          backgroundColor: COLOR.bgPaper,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+          p: SPACING.px16,
+          flexShrink: 0,
+          "&::-webkit-scrollbar": { width: "4px" },
+          "&::-webkit-scrollbar-thumb": {
+            background: COLOR.borderSubtle,
+            borderRadius: RADIUS.xs,
+          },
         }}
       >
-        {/* ── Tab: Văn Bản ── */}
-        {activeTab === "text" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                THÊM VĂN BẢN VÀO THIỆP
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Nhấp vào bất kỳ mẫu chữ nào để chèn vào thiệp và chỉnh sửa.
-              </TextElement>
-            </Box>
-
-            {/* Tạo chữ nhanh */}
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.05em", mb: SPACING.px8 }}>
-                ✍️ Tạo chữ theo kích cỡ
-              </TextElement>
-              <StackCol spacing={SPACING.px8}>
-                <Box
-                  onClick={() => onAddText({ text: "TIÊU ĐỀ CHÍNH", fontSize: 28, fontFamily: "'Playfair Display', serif", fontWeight: "bold" })}
-                  sx={{ ...CARD_ITEM_SX, p: SPACING.px12, textAlign: "center" }}
-                >
-                  <HeadingElement variant="h5" fontFamilyType="serif" weight="bold" sx={{ fontSize: "1.3rem" }}>
-                    + Thêm Tiêu Đề Lớn
-                  </HeadingElement>
-                  <TextElement size="xs" colorVariant="secondary">Phù hợp tên cô dâu, chú rể hoặc tên buổi lễ</TextElement>
-                </Box>
-
-                <Box
-                  onClick={() => onAddText({ text: "Trân trọng kính mời quý khách tới tham dự", fontSize: 14, fontFamily: "Inter, sans-serif", fontStyle: "normal" })}
-                  sx={{ ...CARD_ITEM_SX, p: SPACING.px12, textAlign: "center" }}
-                >
-                  <TextElement size="sm" weight="semibold">+ Thêm Đoạn Văn Lời Mời</TextElement>
-                  <TextElement size="xs" colorVariant="secondary">Phù hợp thông điệp lời chúc hoặc lời ngỏ</TextElement>
-                </Box>
+        {/* ── Tab: Danh Sách Lớp (Layers) ── */}
+        {activeTab === "layers" && (
+          <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+            <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
+              <StackCol spacing={0}>
+                <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+                  DANH SÁCH LỚP ({layers.length})
+                </HeadingElement>
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem" }}>
+                  Thứ tự từ trên xuống dưới trên thiệp
+                </TextElement>
               </StackCol>
-            </Box>
 
-            {/* Mẫu chữ gợi ý */}
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.05em", mb: SPACING.px8 }}>
-                ✨ Mẫu chữ có sẵn cho đám cưới
-              </TextElement>
-              <StackCol spacing={SPACING.px8}>
-                {TEXT_PRESETS.map((item, idx) => (
-                  <Box
-                    key={idx}
-                    onClick={() => onAddText({ text: item.label, fontSize: item.size, fontFamily: item.font, fontWeight: item.weight, fill: item.fill })}
-                    sx={{ ...LIST_ROW_SX }}
-                  >
-                    <Box sx={{ fontSize: "1.2rem", width: 28, textAlign: "center" }}>{item.icon}</Box>
-                    <StackCol spacing={0} sx={{ flex: 1, minWidth: 0 }}>
-                      <TextElement size="xs" colorVariant="secondary">{item.tag}</TextElement>
-                      <TextElement size="sm" weight="bold" sx={{ fontFamily: item.font, color: item.fill }}>
-                        {item.label}
-                      </TextElement>
-                    </StackCol>
-                    <IconElement name="Add" size="xs" color={COLOR.gold.main} />
-                  </Box>
-                ))}
-              </StackCol>
-            </Box>
-          </StackCol>
-        )}
-
-        {/* ── Tab: Stickers ── */}
-        {activeTab === "stickers" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                HỌA TIẾT & STICKER TRANG TRÍ
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Chạm vào biểu tượng để chèn trực tiếp vào thiệp.
-              </TextElement>
-            </Box>
-
-            {/* Filter chips */}
-            <StackRowAlignJustCenter spacing={SPACING.px4}>
-              {[{ id: "all", label: "Tất cả" }, ...STICKER_CATEGORIES].map((chip) => (
-                <Chip
-                  key={chip.id}
-                  label={chip.label}
+              {selectedId && onSelectLayer && (
+                <ButtonElement
+                  variant="text"
                   size="small"
-                  onClick={() => setStickerFilter(chip.id as typeof stickerFilter)}
-                  sx={{
-                    fontSize: FONT_SIZE.xs,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    backgroundColor: stickerFilter === chip.id ? COLOR.gold.main : COLOR.bgSecondary,
-                    color: stickerFilter === chip.id ? COLOR.textInverse : COLOR.textSecondary,
-                    border: `1px solid ${COLOR.borderGoldLight}`,
-                    cursor: "pointer",
-                  }}
-                />
-              ))}
-            </StackRowAlignJustCenter>
+                  onClick={() => onSelectLayer(null)}
+                  sx={{ fontSize: "0.68rem", p: 0, color: COLOR.textSecondary }}
+                >
+                  Bỏ chọn
+                </ButtonElement>
+              )}
+            </StackRowAlignJustBetween>
 
-            {STICKER_CATEGORIES.filter((cat) => stickerFilter === "all" || stickerFilter === cat.id).map((cat) => (
-              <Box key={cat.id}>
-                <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-                  {cat.label}
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            {/* List of layers sorted by zIndex descending */}
+            {layers.length === 0 ? (
+              <StackCenter sx={{ py: SPACING.px32, color: COLOR.textTertiary, flexDirection: "column" }}>
+                <IconElement name="Layers" size="lg" />
+                <TextElement size="xs" sx={{ mt: SPACING.px8 }}>
+                  Chưa có phần tử nào trên thiệp
                 </TextElement>
-                <Grid container spacing={SPACING.px6}>
-                  {cat.emojis.map((emoji, idx) => (
-                    <Grid size={{ xs: 3 }} key={idx}>
-                      <Tooltip title="Bấm để chèn" arrow>
-                        <StackCenter onClick={() => onAddSticker(emoji, 38)} sx={STICKER_CELL_SX}>
-                          {emoji}
-                        </StackCenter>
-                      </Tooltip>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            ))}
-          </StackCol>
-        )}
+              </StackCenter>
+            ) : (
+              <StackCol spacing={SPACING.px6} sx={{ width: "100%" }}>
+                {[...layers]
+                  .sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0))
+                  .map((layer) => {
+                    const isSelected = selectedId === layer.id;
+                    const getIcon = (): IconName => {
+                      switch (layer.type) {
+                        case "text":
+                          return "TextFields";
+                        case "image":
+                          return "Image";
+                        case "shape":
+                          return "Crop";
+                        case "sticker":
+                          return "AutoAwesome";
+                        default:
+                          return "Layers";
+                      }
+                    };
 
-        {/* ── Tab: Hiệu Ứng ── */}
-        {activeTab === "effects" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                HIỆU ỨNG THIỆP CƯỚI 3D
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Chọn phong cách mở thiệp & hiệu ứng hạt rơi khi khách nhận link.
-              </TextElement>
-            </Box>
-
-            {/* 1. Mở bìa thiệp 3D */}
-            <Box>
-              <StackRowAlignJustBetween sx={{ mb: SPACING.px8 }}>
-                <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  💌 1. Hiệu ứng mở bìa thiệp 3D
-                </TextElement>
-              </StackRowAlignJustBetween>
-              <StackCol spacing={SPACING.px8}>
-                {OPENING_EFFECTS.map((item) => {
-                  const isSelected = openingEffect === item.id;
-                  return (
-                    <Box
-                      key={item.id}
-                      onClick={() => onSetOpeningEffect?.(item.id)}
-                      sx={{
-                        ...LIST_ROW_SX,
-                        ...SELECTABLE_ITEM_SX(isSelected),
-                        p: SPACING.px12,
-                      }}
-                    >
-                      <Box sx={{ fontSize: "1.5rem" }}>{item.icon}</Box>
-                      <StackCol spacing={0} sx={{ flex: 1, minWidth: 0 }}>
-                        <StackRowAlignJustBetween>
-                          <TextElement size="sm" weight="bold" sx={{ color: isSelected ? COLOR.gold.main : COLOR.textPrimary }}>
-                            {item.title}
-                          </TextElement>
-                          {isSelected && (
-                            <Chip label="Đang chọn" size="small" sx={{ height: 18, fontSize: "0.6rem", backgroundColor: `${COLOR.gold.main}20`, color: COLOR.gold.main, fontWeight: "bold" }} />
-                          )}
-                        </StackRowAlignJustBetween>
-                        <TextElement size="xs" colorVariant="secondary">
-                          {item.desc}
-                        </TextElement>
-                      </StackCol>
-                    </Box>
-                  );
-                })}
-              </StackCol>
-            </Box>
-
-            {/* 2. Hiệu ứng hạt rơi */}
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-                🌸 2. Hiệu ứng hạt rơi (Ambient FX)
-              </TextElement>
-              <Grid container spacing={SPACING.px8}>
-                {AMBIENT_PARTICLES.map((item) => {
-                  const isSelected = ambientParticle === item.id;
-                  return (
-                    <Grid size={{ xs: 6 }} key={item.id}>
+                    return (
                       <Box
-                        onClick={() => onSetAmbientParticle?.(item.id)}
+                        key={layer.id}
+                        onClick={() => onSelectLayer && onSelectLayer(layer.id)}
                         sx={{
-                          ...SELECTABLE_ITEM_SX(isSelected),
-                          p: SPACING.px12,
+                          width: "100%",
+                          boxSizing: "border-box",
+                          p: SPACING.px8,
+                          borderRadius: RADIUS.sm,
+                          backgroundColor: isSelected ? COLOR.gold[50] : COLOR.bgSecondary,
+                          border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                          cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
-                          gap: SPACING.px8,
+                          justifyContent: "space-between",
+                          gap: SPACING.px6,
+                          transition: ANIMATION.sm,
+                          "&:hover": {
+                            borderColor: COLOR.gold.main,
+                            backgroundColor: isSelected ? COLOR.gold[50] : COLOR.bgPaper,
+                          },
                         }}
                       >
-                        <Box sx={{ fontSize: "1.3rem" }}>{item.icon}</Box>
-                        <StackCol spacing={0}>
-                          <TextElement size="xs" weight="bold" sx={{ color: isSelected ? COLOR.gold.main : COLOR.textPrimary }}>
-                            {item.label}
-                          </TextElement>
-                          <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.65rem" }}>
-                            {item.desc}
-                          </TextElement>
-                        </StackCol>
+                        {/* Left: Icon + Name */}
+                        <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1 }}>
+                          <StackCenter
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: RADIUS.xs,
+                              backgroundColor: isSelected ? COLOR.gold.main : COLOR.bgPaper,
+                              color: isSelected ? COLOR.textInverse : COLOR.gold.main,
+                              border: `1px solid ${COLOR.borderGoldLight}`,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <IconElement name={getIcon()} size="xs" />
+                          </StackCenter>
+
+                          <StackCol spacing={0} sx={{ minWidth: 0, flex: 1 }}>
+                            <TextElement
+                              size="xs"
+                              weight={isSelected ? "bold" : "medium"}
+                              colorVariant={isSelected ? "gold" : "primary"}
+                              sx={{
+                                fontSize: "0.75rem",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                textDecoration: layer.isHidden ? "line-through" : "none",
+                                opacity: layer.isHidden ? 0.5 : 1,
+                              }}
+                            >
+                              {layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
+                            </TextElement>
+                          </StackCol>
+                        </StackRowAlignJustStart>
+
+                        {/* Right: Quick Action Icons */}
+                        <StackRow sx={{ gap: "2px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                          {/* Hide / Show Toggle */}
+                          {onUpdateLayer && (
+                            <Tooltip title={layer.isHidden ? "Hiện layer" : "Ẩn layer"} arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onUpdateLayer(layer.id, { isHidden: !layer.isHidden })}
+                                sx={{
+                                  p: 0.3,
+                                  color: layer.isHidden ? COLOR.textTertiary : COLOR.textSecondary,
+                                  "&:hover": { color: COLOR.gold.main },
+                                }}
+                              >
+                                <IconElement name={layer.isHidden ? "VisibilityOff" : "Visibility"} size="xs" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Lock / Unlock Toggle */}
+                          {onUpdateLayer && (
+                            <Tooltip title={layer.isLocked ? "Mở khóa" : "Khóa vị trí"} arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onUpdateLayer(layer.id, { isLocked: !layer.isLocked })}
+                                sx={{
+                                  p: 0.3,
+                                  color: layer.isLocked ? COLOR.gold.main : COLOR.textTertiary,
+                                  "&:hover": { color: COLOR.gold.main },
+                                }}
+                              >
+                                <IconElement name={layer.isLocked ? "Lock" : "LockOpen"} size="xs" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Bring Up */}
+                          {onBringForward && (
+                            <Tooltip title="Lên 1 tầng" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onBringForward(layer.id)}
+                                sx={{
+                                  p: 0.3,
+                                  color: COLOR.textSecondary,
+                                  "&:hover": { color: COLOR.gold.main },
+                                }}
+                              >
+                                <IconElement name="ArrowUpward" size="xs" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Send Down */}
+                          {onSendBackward && (
+                            <Tooltip title="Xuống 1 tầng" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onSendBackward(layer.id)}
+                                sx={{
+                                  p: 0.3,
+                                  color: COLOR.textSecondary,
+                                  "&:hover": { color: COLOR.gold.main },
+                                }}
+                              >
+                                <IconElement name="ArrowDownward" size="xs" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Delete */}
+                          {onDeleteLayer && (
+                            <Tooltip title="Xóa" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onDeleteLayer(layer.id)}
+                                sx={{
+                                  p: 0.3,
+                                  color: COLOR.status.error.main,
+                                  "&:hover": { color: COLOR.status.error.dark },
+                                }}
+                              >
+                                <IconElement name="Delete" size="xs" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </StackRow>
                       </Box>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            </Box>
+                    );
+                  })}
+              </StackCol>
+            )}
           </StackCol>
         )}
 
-        {/* ── Tab: Khung Hình & Viền ── */}
-        {activeTab === "shapes" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                KHUNG VIỀN & DẢI PHÂN CÁCH
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Thêm khung hình trang trọng để làm nổi bật ảnh và chữ.
-              </TextElement>
-            </Box>
+        {/* ── Tab: Văn Bản ── */}
+        {activeTab === "text" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              MẪU CHỮ NGHỆ THUẬT
+            </HeadingElement>
+
+            {/* Tạo chữ nhanh */}
+            <StackRowAlignJustBetween sx={{ gap: SPACING.px8 }}>
+              <ButtonElement
+                variant="gradient"
+                size="small"
+                fullWidth
+                rounded="sm"
+                onClick={() =>
+                  onAddText({
+                    text: "TIÊU ĐỀ",
+                    fontSize: 28,
+                    fontFamily: "'Playfair Display', serif",
+                    fontWeight: "bold",
+                  })
+                }
+                leftIcon={<IconElement name="Add" size="xs" />}
+                sx={{
+                  height: 36,
+                  fontSize: FONT_SIZE.xs,
+                  "&:hover": { borderColor: COLOR.gold.main },
+                }}
+              >
+                Tiêu Đề
+              </ButtonElement>
+              <ButtonElement
+                variant="outline"
+                size="small"
+                fullWidth
+                rounded="sm"
+                onClick={() =>
+                  onAddText({
+                    text: "Trân trọng kính mời quý khách...",
+                    fontSize: 14,
+                    fontFamily: "Inter, sans-serif",
+                  })
+                }
+                leftIcon={<IconElement name="Add" size="xs" />}
+                sx={{
+                  height: 36,
+                  fontSize: FONT_SIZE.xs,
+                  backgroundColor: COLOR.bgPaper,
+                  borderColor: COLOR.borderGoldLight,
+                  "&:hover": { borderColor: COLOR.gold.main, backgroundColor: COLOR.bgPaper },
+                }}
+              >
+                Đoạn Văn
+              </ButtonElement>
+            </StackRowAlignJustBetween>
+
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            {/* Mẫu chữ cưới */}
             <StackCol spacing={SPACING.px8}>
-              {[
-                { type: "divider" as const, preview: <Box sx={{ width: 40, height: 2, backgroundColor: COLOR.gold.main }} />, label: "Dải Phân Cách Vàng Hoàng Kim", desc: "Ngăn cách giữa các phần nội dung" },
-                { type: "rect"    as const, preview: <Box sx={{ width: 26, height: 26, border: `2px solid ${COLOR.gold.main}`, borderRadius: RADIUS.xs }} />, label: "Khung Chữ Nhật Bo Góc", desc: "Viền bao quanh ảnh cưới hoặc lời chúc" },
-                { type: "circle"  as const, preview: <Box sx={{ width: 26, height: 26, border: `2px solid ${COLOR.gold.main}`, borderRadius: RADIUS.full }} />, label: "Khung Tròn Chân Dung", desc: "Khung tròn sang trọng cho ảnh avatar cô dâu chú rể" },
-              ].map((shape) => (
-                <Box key={shape.type} onClick={() => onAddShape(shape.type)} sx={{ ...LIST_ROW_SX }}>
-                  {shape.preview}
-                  <StackCol spacing={0} sx={{ flex: 1 }}>
-                    <TextElement size="sm" weight="semibold">{shape.label}</TextElement>
-                    <TextElement size="xs" colorVariant="secondary">{shape.desc}</TextElement>
-                  </StackCol>
-                  <IconElement name="Add" size="xs" color={COLOR.gold.main} />
+              {TEXT_PRESETS.map((item, idx) => (
+                <Box
+                  key={idx}
+                  onClick={() =>
+                    onAddText({
+                      text: item.label,
+                      fontSize: item.size,
+                      fontFamily: item.font,
+                      fontWeight: item.weight === "bold" ? "bold" : "normal",
+                      fill: item.fill,
+                    })
+                  }
+                  sx={{
+                    p: "10px 12px",
+                    cursor: "pointer",
+                    borderRadius: RADIUS.md,
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    backgroundColor: COLOR.bgSecondary,
+                    transition: ANIMATION.sm,
+                    "&:hover": {
+                      borderColor: COLOR.gold.main,
+                      backgroundColor: COLOR.bgPaper,
+                    },
+                  }}
+                >
+                  <TextElement
+                    size="xs"
+                    colorVariant="secondary"
+                    sx={{ fontSize: "0.68rem", mb: 0.5, letterSpacing: "0.05em" }}
+                  >
+                    {item.category}
+                  </TextElement>
+                  <TextElement
+                    size="sm"
+                    weight={item.weight}
+                    sx={{
+                      fontFamily: item.font,
+                      fontSize: `${item.size}px`,
+                      color: item.fill,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {item.label}
+                  </TextElement>
                 </Box>
               ))}
             </StackCol>
           </StackCol>
         )}
 
-        {/* ── Tab: Tải Ảnh ── */}
-        {activeTab === "uploads" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                TẢI ẢNH CƯỚI CỦA BẠN
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Hỗ trợ định dạng JPG, PNG, WebP (Tối đa 10MB).
-              </TextElement>
-            </Box>
+        {/* ── Tab: Họa Tiết (Stickers) ── */}
+        {activeTab === "stickers" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              HỌA TIẾT & BIỂU TƯỢNG
+            </HeadingElement>
 
-            <ButtonElement
-              component="label"
-              variant="gradient"
-              size="medium"
-              fullWidth
-              rounded="md"
-              leftIcon={<IconElement name="CloudUpload" size="xs" />}
+            {/* Phân loại Stickers */}
+            <StackRowAlignJustStart sx={{ gap: SPACING.px6 }}>
+              {(["all", "floral", "rings", "badges"] as const).map((filter) => (
+                <Chip
+                  key={filter}
+                  label={
+                    filter === "all"
+                      ? "Tất cả"
+                      : filter === "floral"
+                      ? "Hoa lá"
+                      : filter === "rings"
+                      ? "Nhẫn & Tim"
+                      : "Hoàng Gia"
+                  }
+                  size="small"
+                  onClick={() => setStickerFilter(filter)}
+                  sx={{
+                    fontSize: "0.7rem",
+                    cursor: "pointer",
+                    backgroundColor: stickerFilter === filter ? COLOR.gold.main : COLOR.bgSecondary,
+                    color: stickerFilter === filter ? COLOR.textInverse : COLOR.textPrimary,
+                    borderColor: stickerFilter === filter ? COLOR.gold.main : COLOR.borderGoldLight,
+                    borderWidth: 1,
+                    borderStyle: "solid",
+                    "&:hover": { borderColor: COLOR.gold.main },
+                  }}
+                />
+              ))}
+            </StackRowAlignJustStart>
+
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            {/* Grid các icon Emoji cao cấp */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: SPACING.px8,
+              }}
             >
-              Chọn Ảnh Từ Thiết Bị Của Bạn
-              <input type="file" hidden accept="image/*" onChange={handleFileUpload} />
-            </ButtonElement>
-
-            <Divider />
-
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-                📸 Ảnh mẫu chất lượng cao (Nhấp để chèn)
-              </TextElement>
-
-              <Grid container spacing={SPACING.px8}>
-                {[
-                  { title: "Cặp đôi hoàng hôn", url: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=400&auto=format&fit=crop" },
-                  { title: "Nắm tay lễ đường", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=400&auto=format&fit=crop" },
-                  { title: "Chân dung cô dâu", url: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=400&auto=format&fit=crop" },
-                  { title: "Hoa cưới lãng mạn", url: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=400&auto=format&fit=crop" },
-                ].map((item, idx) => (
-                  <Grid size={{ xs: 6 }} key={idx}>
-                    <Tooltip title={`Chèn: ${item.title}`} arrow>
-                      <Box
-                        component="img"
-                        src={item.url}
-                        alt={item.title}
-                        onClick={() => onAddImage(item.url)}
-                        sx={{
-                          width: "100%",
-                          height: 95,
-                          objectFit: "cover",
-                          borderRadius: RADIUS.md,
-                          cursor: "pointer",
-                          border: `1px solid ${COLOR.borderGoldLight}`,
-                          transition: ANIMATION.sm,
-                          "&:hover": { transform: "scale(1.03)", borderColor: COLOR.gold.main, boxShadow: SHADOW.md },
-                        }}
-                      />
-                    </Tooltip>
-                  </Grid>
-                ))}
-              </Grid>
+              {STICKER_CATEGORIES.filter(
+                (c) => stickerFilter === "all" || c.id === stickerFilter
+              ).map((cat) =>
+                cat.emojis.map((emoji, idx) => (
+                  <StackCenter
+                    key={`${cat.id}-${idx}`}
+                    onClick={() => onAddSticker(emoji, 36)}
+                    sx={{
+                      height: 52,
+                      borderRadius: RADIUS.md,
+                      backgroundColor: COLOR.bgSecondary,
+                      border: `1px solid ${COLOR.borderGoldLight}`,
+                      cursor: "pointer",
+                      fontSize: "1.5rem",
+                      transition: ANIMATION.sm,
+                      "&:hover": {
+                        borderColor: COLOR.gold.main,
+                        backgroundColor: COLOR.bgPaper,
+                        transform: "scale(1.1)",
+                      },
+                    }}
+                  >
+                    {emoji}
+                  </StackCenter>
+                ))
+              )}
             </Box>
           </StackCol>
         )}
 
-        {/* ── Tab: Màu Nền ── */}
-        {activeTab === "backgrounds" && (
-          <StackCol spacing={SPACING.px20}>
-            <Box>
-              <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.md }}>
-                TÙY CHỌN MÀU NỀN THIỆP
-              </HeadingElement>
-              <TextElement size="xs" colorVariant="secondary" sx={{ mt: SPACING.px4 }}>
-                Thay đổi tông màu nền tổng thể cho toàn bộ thiệp cưới.
-              </TextElement>
-            </Box>
+        {/* ── Tab: Hiệu Ứng (Effects) ── */}
+        {activeTab === "effects" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              HIỆU ỨNG MỞ BÌA 3D
+            </HeadingElement>
 
-            {/* Custom HEX */}
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-                🎯 Nhập mã màu HEX tùy ý
+            {/* Danh sách hiệu ứng mở bìa */}
+            <StackCol spacing={SPACING.px8}>
+              {OPENING_EFFECTS.map((eff) => {
+                const isSelected = openingEffect === eff.id;
+                return (
+                  <Box
+                    key={eff.id}
+                    onClick={() => onSetOpeningEffect && onSetOpeningEffect(eff.id)}
+                    sx={{
+                      p: "10px 12px",
+                      cursor: "pointer",
+                      borderRadius: RADIUS.md,
+                      border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                      backgroundColor: isSelected ? `${COLOR.gold.main}0A` : COLOR.bgSecondary,
+                      transition: ANIMATION.sm,
+                      "&:hover": {
+                        borderColor: COLOR.gold.main,
+                        backgroundColor: COLOR.bgPaper,
+                      },
+                    }}
+                  >
+                    <StackRowAlignJustBetween>
+                      <StackRowAlignJustStart sx={{ gap: SPACING.px8 }}>
+                        <span style={{ fontSize: "1.2rem" }}>{eff.icon}</span>
+                        <StackCol spacing={0}>
+                          <TextElement
+                            size="xs"
+                            weight="bold"
+                            sx={{ color: isSelected ? COLOR.gold.main : COLOR.textPrimary }}
+                          >
+                            {eff.title}
+                          </TextElement>
+                          <TextElement
+                            size="xs"
+                            colorVariant="secondary"
+                            sx={{ fontSize: "0.65rem", lineHeight: 1.2 }}
+                          >
+                            {eff.desc}
+                          </TextElement>
+                        </StackCol>
+                      </StackRowAlignJustStart>
+                      {isSelected && (
+                        <IconElement name="Check" size="xs" color={COLOR.gold.main} />
+                      )}
+                    </StackRowAlignJustBetween>
+                  </Box>
+                );
+              })}
+            </StackCol>
+
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              HIỆU ỨNG HẠT RƠI (PARTICLES)
+            </HeadingElement>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: SPACING.px8,
+              }}
+            >
+              {AMBIENT_PARTICLES.map((item) => {
+                const isSelected = ambientParticle === item.id;
+                return (
+                  <StackCenter
+                    key={item.id}
+                    onClick={() => onSetAmbientParticle && onSetAmbientParticle(item.id)}
+                    sx={{
+                      p: SPACING.px8,
+                      borderRadius: RADIUS.md,
+                      border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                      backgroundColor: isSelected ? `${COLOR.gold.main}0A` : COLOR.bgSecondary,
+                      cursor: "pointer",
+                      gap: SPACING.px6,
+                      transition: ANIMATION.sm,
+                      "&:hover": {
+                        borderColor: COLOR.gold.main,
+                        backgroundColor: COLOR.bgPaper,
+                      },
+                    }}
+                  >
+                    <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
+                    <TextElement
+                      size="xs"
+                      weight="semibold"
+                      sx={{
+                        fontSize: "0.72rem",
+                        color: isSelected ? COLOR.gold.main : COLOR.textPrimary,
+                      }}
+                    >
+                      {item.label}
+                    </TextElement>
+                  </StackCenter>
+                );
+              })}
+            </Box>
+          </StackCol>
+        )}
+
+        {/* ── Tab: Khung Hình (Shapes) ── */}
+        {activeTab === "shapes" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              HÌNH KHỐI & DẢI PHÂN CÁCH
+            </HeadingElement>
+
+            {/* Dải phân cách */}
+            <StackCol spacing={SPACING.px8}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+              >
+                Dải Phân Cách Nghệ Thuật
               </TextElement>
+              <ButtonElement
+                variant="outline"
+                size="small"
+                fullWidth
+                rounded="sm"
+                onClick={() => onAddShape("divider")}
+                leftIcon={<IconElement name="Add" size="xs" />}
+                sx={{
+                  height: 38,
+                  backgroundColor: COLOR.bgSecondary,
+                  borderColor: COLOR.borderGoldLight,
+                  fontSize: FONT_SIZE.xs,
+                  "&:hover": { borderColor: COLOR.gold.main },
+                }}
+              >
+                Thêm Dải Phân Cách Vàng
+              </ButtonElement>
+            </StackCol>
+
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            {/* Khung chân dung / Hình khối */}
+            <StackCol spacing={SPACING.px8}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+              >
+                Khung Khối & Bo Góc
+              </TextElement>
+
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  backgroundColor: COLOR.bgSecondary,
-                  borderRadius: RADIUS.md,
-                  border: `1px solid ${COLOR.borderSubtle}`,
-                  px: SPACING.px12,
-                  py: SPACING.px8,
-                  gap: SPACING.px12,
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: SPACING.px8,
+                }}
+              >
+                <StackCenter
+                  onClick={() => onAddShape("rect")}
+                  sx={{
+                    height: 70,
+                    borderRadius: RADIUS.md,
+                    border: `1.5px dashed ${COLOR.borderGold}`,
+                    backgroundColor: COLOR.bgSecondary,
+                    cursor: "pointer",
+                    flexDirection: "column",
+                    gap: "4px",
+                    transition: ANIMATION.sm,
+                    "&:hover": { borderColor: COLOR.gold.main, backgroundColor: COLOR.bgPaper },
+                  }}
+                >
+                  <IconElement name="Crop" size="sm" color={COLOR.gold.main} />
+                  <TextElement size="xs" sx={{ fontSize: "0.68rem" }}>
+                    Khung Chữ Nhật
+                  </TextElement>
+                </StackCenter>
+
+                <StackCenter
+                  onClick={() => onAddShape("circle")}
+                  sx={{
+                    height: 70,
+                    borderRadius: RADIUS.md,
+                    border: `1.5px dashed ${COLOR.borderGold}`,
+                    backgroundColor: COLOR.bgSecondary,
+                    cursor: "pointer",
+                    flexDirection: "column",
+                    gap: "4px",
+                    transition: ANIMATION.sm,
+                    "&:hover": { borderColor: COLOR.gold.main, backgroundColor: COLOR.bgPaper },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: RADIUS.full,
+                      border: `1.5px solid ${COLOR.gold.main}`,
+                    }}
+                  />
+                  <TextElement size="xs" sx={{ fontSize: "0.68rem" }}>
+                    Khung Tròn
+                  </TextElement>
+                </StackCenter>
+              </Box>
+            </StackCol>
+          </StackCol>
+        )}
+
+        {/* ── Tab: Tải Ảnh (Uploads) ── */}
+        {activeTab === "uploads" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              TẢI ẢNH CƯỚI
+            </HeadingElement>
+
+            <label style={{ width: "100%" }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+              <StackCenter
+                sx={{
+                  p: SPACING.px24,
+                  border: `2px dashed ${COLOR.gold.main}`,
+                  borderRadius: RADIUS.lg,
+                  backgroundColor: `${COLOR.gold.main}0A`,
+                  cursor: "pointer",
+                  flexDirection: "column",
+                  gap: SPACING.px8,
+                  textAlign: "center",
                   transition: ANIMATION.sm,
-                  "&:focus-within": {
-                    borderColor: COLOR.gold.main,
-                    backgroundColor: COLOR.bgPaper,
-                    boxShadow: `0 0 0 2px ${COLOR.gold[100]}`,
+                  "&:hover": {
+                    backgroundColor: `${COLOR.gold.main}14`,
                   },
                 }}
               >
+                <IconElement name="CloudUpload" size="lg" color={COLOR.gold.main} />
+                <TextElement size="xs" weight="bold" colorVariant="gold">
+                  Chạm để tải ảnh từ máy
+                </TextElement>
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.65rem" }}>
+                  Hỗ trợ JPG, PNG, WEBP tối đa 10MB
+                </TextElement>
+              </StackCenter>
+            </label>
+
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            <TextElement
+              size="xs"
+              weight="bold"
+              colorVariant="secondary"
+              sx={{ textTransform: "uppercase", fontSize: "0.68rem" }}
+            >
+              Ảnh Mẫu Sẵn Có
+            </TextElement>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: SPACING.px8,
+              }}
+            >
+              {[
+                "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80",
+                "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80",
+                "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=600&q=80",
+                "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80",
+              ].map((src, idx) => (
                 <Box
+                  key={idx}
+                  component="img"
+                  src={src}
+                  alt={`Sample ${idx}`}
+                  onClick={() => onAddImage(src)}
                   sx={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: RADIUS.sm,
-                    backgroundColor: customBgHex,
-                    border: `1px solid ${COLOR.borderSubtle}`,
-                    flexShrink: 0,
-                  }}
-                />
-                <input
-                  type="text"
-                  value={customBgHex}
-                  onChange={(e) => handleCustomBgChange(e.target.value)}
-                  placeholder="#FAF8F5"
-                  style={{
-                    border: "none",
-                    outline: "none",
                     width: "100%",
-                    fontSize: FONT_SIZE.sm,
-                    fontFamily: "monospace",
-                    fontWeight: FONT_WEIGHT.semibold,
-                    color: COLOR.textPrimary,
-                    background: "transparent",
+                    height: 90,
+                    borderRadius: RADIUS.md,
+                    objectFit: "cover",
+                    cursor: "pointer",
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    transition: ANIMATION.sm,
+                    "&:hover": {
+                      borderColor: COLOR.gold.main,
+                      transform: "scale(1.03)",
+                    },
                   }}
                 />
-                <Tooltip title="Chọn từ bảng màu trực quan" arrow>
-                  <label style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-                    <IconElement name="ColorLens" size="xs" color={COLOR.gold.main} />
-                    <input
-                      type="color"
-                      value={customBgHex.startsWith("#") ? customBgHex : COLOR.bgPrimary}
-                      onChange={(e) => handleCustomBgChange(e.target.value)}
-                      style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-                    />
-                  </label>
-                </Tooltip>
-              </Box>
+              ))}
+            </Box>
+          </StackCol>
+        )}
+
+        {/* ── Tab: Màu Nền (Backgrounds) ── */}
+        {activeTab === "backgrounds" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              TÔNG MÀU NỀN THIỆP
+            </HeadingElement>
+
+            {/* Custom Color Input */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                backgroundColor: COLOR.bgSecondary,
+                borderRadius: RADIUS.sm,
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                px: SPACING.px8,
+                py: SPACING.px4,
+                gap: SPACING.px8,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: RADIUS.full,
+                  backgroundColor: customBgHex,
+                  border: `1px solid ${COLOR.borderSubtle}`,
+                  flexShrink: 0,
+                }}
+              />
+              <input
+                type="text"
+                value={customBgHex}
+                onChange={(e) => handleCustomBgChange(e.target.value)}
+                placeholder="#FAF8F5"
+                style={{
+                  border: "none",
+                  outline: "none",
+                  width: "100%",
+                  fontSize: FONT_SIZE.xs,
+                  fontFamily: "monospace",
+                  fontWeight: FONT_WEIGHT.semibold,
+                  color: COLOR.textPrimary,
+                  background: "transparent",
+                }}
+              />
+              <Tooltip title="Mở bảng màu" arrow>
+                <label style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  <IconElement name="ColorLens" size="xs" color={COLOR.gold.main} />
+                  <input
+                    type="color"
+                    value={customBgHex.startsWith("#") ? customBgHex : COLOR.bgPrimary}
+                    onChange={(e) => handleCustomBgChange(e.target.value)}
+                    style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                  />
+                </label>
+              </Tooltip>
             </Box>
 
-            {/* Preset Palettes */}
-            <Box>
-              <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ textTransform: "uppercase", letterSpacing: "0.04em", mb: SPACING.px8 }}>
-                👑 Bảng màu phong thủy & sang trọng
-              </TextElement>
-              <Grid container spacing={SPACING.px8}>
-                {BG_PRESETS.map((bg, idx) => (
-                  <Grid size={{ xs: 6 }} key={idx}>
+            <Divider sx={{ borderColor: COLOR.divider }} />
+
+            {/* Danh sách bảng màu chuẩn luxury */}
+            <StackCol spacing={SPACING.px6}>
+              {BG_PRESETS.map((bg, idx) => {
+                const isSelected = customBgHex.toLowerCase() === bg.color.toLowerCase();
+                return (
+                  <Box
+                    key={idx}
+                    onClick={() => handleCustomBgChange(bg.color)}
+                    sx={{
+                      p: "8px 12px",
+                      cursor: "pointer",
+                      borderRadius: RADIUS.md,
+                      border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                      backgroundColor: COLOR.bgSecondary,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: SPACING.px12,
+                      transition: ANIMATION.sm,
+                      "&:hover": {
+                        borderColor: COLOR.gold.main,
+                        backgroundColor: COLOR.bgPaper,
+                      },
+                    }}
+                  >
                     <Box
-                      onClick={() => handleCustomBgChange(bg.color)}
                       sx={{
-                        ...CARD_ITEM_SX,
-                        p: SPACING.px12,
-                        height: 58,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: SPACING.px8,
+                        width: 22,
+                        height: 22,
+                        borderRadius: RADIUS.full,
                         backgroundColor: bg.color,
-                        border: `1.5px solid ${bg.border}`,
-                        "&:hover": {
-                          borderColor: COLOR.gold.main,
-                          transform: "translateY(-2px)",
-                          boxShadow: SHADOW.sm,
-                          backgroundColor: bg.color,
-                        },
+                        border: `1.5px solid ${bg.dot}`,
+                        flexShrink: 0,
                       }}
-                    >
-                      <Box sx={{ width: 18, height: 18, borderRadius: RADIUS.full, backgroundColor: bg.dot, border: "1px solid rgba(0,0,0,0.1)", flexShrink: 0 }} />
-                      <StackCol spacing={0}>
-                        <TextElement
-                          size="xs"
-                          weight="bold"
-                          sx={{
-                            fontSize: FONT_SIZE.xs,
-                            lineHeight: 1.2,
-                            color: DARK_BG_COLORS.has(bg.color) ? COLOR.textInverse : COLOR.textPrimary,
-                          }}
-                        >
-                          {bg.name}
-                        </TextElement>
-                        <TextElement
-                          size="xs"
-                          sx={{
-                            fontSize: "0.65rem",
-                            color: DARK_BG_COLORS.has(bg.color) ? "rgba(255,255,255,0.7)" : COLOR.textSecondary,
-                          }}
-                        >
-                          {bg.desc}
-                        </TextElement>
-                      </StackCol>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
+                    />
+                    <StackCol spacing={0} sx={{ flex: 1, minWidth: 0 }}>
+                      <TextElement
+                        size="xs"
+                        weight="bold"
+                        sx={{ color: isSelected ? COLOR.gold.main : COLOR.textPrimary }}
+                      >
+                        {bg.name}
+                      </TextElement>
+                      <TextElement
+                        size="xs"
+                        colorVariant="secondary"
+                        sx={{ fontSize: "0.65rem", lineHeight: 1.1 }}
+                      >
+                        {bg.desc}
+                      </TextElement>
+                    </StackCol>
+                    {isSelected && (
+                      <IconElement name="Check" size="xs" color={COLOR.gold.main} />
+                    )}
+                  </Box>
+                );
+              })}
+            </StackCol>
           </StackCol>
         )}
       </Box>

@@ -4,7 +4,7 @@ import { STACK_CENTER } from "@/components/shared";
 export const CARD_ITEM_SX = {
   cursor: "pointer",
   borderRadius: RADIUS.md,
-  border: `1px solid ${COLOR.bgTertiary}`,
+  border: `1px solid ${COLOR.borderGoldLight}`,
   backgroundColor: COLOR.bgSecondary,
   transition: ANIMATION.sm,
   "&:hover": {
@@ -16,10 +16,9 @@ export const CARD_ITEM_SX = {
 export const SELECTABLE_ITEM_SX = (isSelected: boolean) => ({
   cursor: "pointer",
   borderRadius: RADIUS.md,
-  border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.bgTertiary}`,
-  backgroundColor: isSelected ? COLOR.bgTertiary : COLOR.bgSecondary,
+  border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+  backgroundColor: isSelected ? `${COLOR.gold.main}0A` : COLOR.bgSecondary,
   transition: ANIMATION.sm,
-  boxShadow: isSelected ? `0 2px 10px ${COLOR.gold.main}1F` : "none",
   "&:hover": {
     backgroundColor: COLOR.bgPaper,
     borderColor: COLOR.gold.main,
@@ -32,8 +31,8 @@ export const PANEL_RAIL_SX = {
   borderRight: `1px solid ${COLOR.borderGoldLight}`,
   ...STACK_CENTER,
   flexDirection: "column" as const,
-  py: SPACING.px16,
-  gap: SPACING.px8,
+  py: SPACING.px12,
+  gap: SPACING.px6,
   flexShrink: 0,
 } as const;
 

@@ -120,19 +120,23 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
 
             // Shape Layer (Outer border, inner border, divider line, card background)
             if (layer.type === "shape") {
-              if (layer.shapeType === "rect") {
+              const isDivider =
+                layer.shapeType === "divider" ||
+                layer.id.includes("div") ||
+                (typeof layer.height === "number" && layer.height <= 3);
+
+              if (isDivider) {
                 return (
                   <Box
                     key={layer.id}
                     sx={{
                       position: "absolute",
-                      left: layer.x,
-                      top: layer.y,
-                      width: layer.width,
-                      height: layer.height,
-                      backgroundColor: layer.fill || "transparent",
-                      border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
-                      borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width}px`,
+                      height: `${layer.height || layer.strokeWidth || 1.5}px`,
+                      backgroundColor: layer.stroke || layer.fill || COLOR.gold.main,
+                      opacity: layer.opacity ?? 1,
                       zIndex: layer.zIndex,
                       pointerEvents: layer.isLocked ? "none" : "auto",
                       ...animStyles,
@@ -147,13 +151,14 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                     key={layer.id}
                     sx={{
                       position: "absolute",
-                      left: layer.x,
-                      top: layer.y,
-                      width: layer.width,
-                      height: layer.height || layer.width,
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width}px`,
+                      height: `${layer.height || layer.width}px`,
                       backgroundColor: layer.fill || "transparent",
                       border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
                       borderRadius: RADIUS.full,
+                      opacity: layer.opacity ?? 1,
                       zIndex: layer.zIndex,
                       pointerEvents: layer.isLocked ? "none" : "auto",
                       ...animStyles,
@@ -162,24 +167,25 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                 );
               }
 
-              if (layer.shapeType === "divider") {
-                return (
-                  <Box
-                    key={layer.id}
-                    sx={{
-                      position: "absolute",
-                      left: layer.x,
-                      top: layer.y,
-                      width: layer.width,
-                      height: layer.strokeWidth || 1,
-                      backgroundColor: layer.stroke || COLOR.gold.main,
-                      zIndex: layer.zIndex,
-                      pointerEvents: layer.isLocked ? "none" : "auto",
-                      ...animStyles,
-                    }}
-                  />
-                );
-              }
+              return (
+                <Box
+                  key={layer.id}
+                  sx={{
+                    position: "absolute",
+                    left: `${layer.x}px`,
+                    top: `${layer.y}px`,
+                    width: `${layer.width}px`,
+                    height: `${layer.height}px`,
+                    backgroundColor: layer.fill || "transparent",
+                    border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
+                    borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
+                    opacity: layer.opacity ?? 1,
+                    zIndex: layer.zIndex,
+                    pointerEvents: layer.isLocked ? "none" : "auto",
+                    ...animStyles,
+                  }}
+                />
+              );
             }
 
             // Image Layer (Photo arch, Couple portrait, Gallery photos)
@@ -192,12 +198,13 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                   alt={layer.name || "Wedding Image"}
                   sx={{
                     position: "absolute",
-                    left: layer.x,
-                    top: layer.y,
-                    width: layer.width,
-                    height: layer.height,
+                    left: `${layer.x}px`,
+                    top: `${layer.y}px`,
+                    width: `${layer.width}px`,
+                    height: `${layer.height}px`,
                     borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
                     objectFit: "cover",
+                    opacity: layer.opacity ?? 1,
                     zIndex: layer.zIndex,
                     boxShadow: SHADOW.sm,
                     ...animStyles,
@@ -213,10 +220,11 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                   key={layer.id}
                   sx={{
                     position: "absolute",
-                    left: layer.x,
-                    top: layer.y,
+                    left: `${layer.x}px`,
+                    top: `${layer.y}px`,
                     fontSize: `${layer.fontSize || 32}px`,
                     lineHeight: 1,
+                    opacity: layer.opacity ?? 1,
                     zIndex: layer.zIndex,
                     userSelect: "none",
                     ...animStyles,
@@ -236,9 +244,9 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                   key={layer.id}
                   sx={{
                     position: "absolute",
-                    left: layer.x,
-                    top: layer.y,
-                    width: layer.width || "auto",
+                    left: `${layer.x}px`,
+                    top: `${layer.y}px`,
+                    width: layer.width ? `${layer.width}px` : "auto",
                     fontFamily: layer.fontFamily || FONT_FAMILY.sans,
                     fontSize: `${layer.fontSize}px`,
                     fontWeight: layer.fontWeight || "normal",
@@ -248,6 +256,7 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                     lineHeight: layer.lineHeight || 1.3,
                     letterSpacing: layer.letterSpacing ? `${layer.letterSpacing}px` : "normal",
                     whiteSpace: layer.width ? "normal" : "nowrap",
+                    opacity: layer.opacity ?? 1,
                     zIndex: layer.zIndex,
                     ...animStyles,
                   }}

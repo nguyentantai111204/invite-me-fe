@@ -7,6 +7,7 @@ import { useCanvasEditor } from "@/components/editor/use-canvas-editor.hook";
 import { CanvasTopBar } from "@/components/editor/top-toolbar/canvas-top-bar";
 import { CanvasAssetsDrawer } from "@/components/editor/left-panel/canvas-assets-drawer";
 import { CanvasPropertiesInspector } from "@/components/editor/right-panel/canvas-properties-inspector";
+import { EditorOnboardingTour } from "@/components/editor/editor-onboarding-tour";
 import {
   HeadingElement,
   TextElement,
@@ -67,10 +68,24 @@ export default function EditorPage({ params }: EditorPageProps) {
     expandCanvasHeight,
     undo,
     redo,
+    saveStatus,
+    lastSavedTime,
   } = useCanvasEditor(undefined, cardId);
 
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [runTour, setRunTour] = useState(false);
+
+  // Auto trigger tour on first visit
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const tourSeen = localStorage.getItem("inviteme_editor_tour_seen");
+      if (!tourSeen) {
+        const timer = setTimeout(() => setRunTour(true), 800);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
 
   const handleCopyPublicLink = () => {
     if (typeof navigator !== "undefined") {
@@ -80,8 +95,27 @@ export default function EditorPage({ params }: EditorPageProps) {
     }
   };
 
+  const viewportRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll viewport smoothly to selected layer position
+  React.useEffect(() => {
+    if (selectedId && viewportRef.current) {
+      const selected = document.layers.find((l) => l.id === selectedId);
+      if (selected && typeof selected.y === "number") {
+        const targetScrollTop = Math.max(0, selected.y * scale - 140);
+        viewportRef.current.scrollTo({
+          top: targetScrollTop,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [selectedId, scale, document.layers]);
+
   return (
     <Box sx={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: "#F7F8FA" }}>
+      {/* Interactive Joyride Onboarding Tour */}
+      <EditorOnboardingTour run={runTour} onFinish={() => setRunTour(false)} />
+
       {/* 1. Canvas Top Bar */}
       <CanvasTopBar
         title={document.title}
@@ -89,19 +123,30 @@ export default function EditorPage({ params }: EditorPageProps) {
         canUndo={canUndo}
         canRedo={canRedo}
         scale={scale}
+        saveStatus={saveStatus}
+        lastSavedTime={lastSavedTime}
         onScaleChange={setScale}
         onUndo={undo}
         onRedo={redo}
         onPublish={() => setPublishDialogOpen(true)}
         onAddLength={() => expandCanvasHeight(300)}
+        onStartTour={() => setRunTour(true)}
       />
 
       {/* 2. Main Workspace: Left Assets Drawer + Center Stage + Right Properties Inspector */}
       <Box sx={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        {/* Left: Assets Drawer (Mẫu Chữ, Họa Tiết, Hiệu Ứng, Khung Hình, Tải Ảnh, Màu Nền) */}
+        {/* Left: Assets Drawer (Danh Sách Lớp, Mẫu Chữ, Họa Tiết, Hiệu Ứng, Khung Hình, Tải Ảnh, Màu Nền) */}
         <CanvasAssetsDrawer
+          layers={document.layers}
+          selectedId={selectedId}
           openingEffect={document.openingEffect}
           ambientParticle={document.ambientParticle}
+          onSelectLayer={selectLayer}
+          onUpdateLayer={updateLayer}
+          onDeleteLayer={deleteLayer}
+          onDuplicateLayer={duplicateLayer}
+          onBringForward={bringForward}
+          onSendBackward={sendBackward}
           onSetOpeningEffect={setOpeningEffect}
           onSetAmbientParticle={setAmbientParticle}
           onAddText={addTextLayer}
@@ -113,6 +158,7 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         {/* Center: Scrollable Stage Viewport */}
         <Box
+          ref={viewportRef}
           sx={{
             flex: 1,
             height: "100%",
@@ -136,33 +182,6 @@ export default function EditorPage({ params }: EditorPageProps) {
             onDuplicateLayer={duplicateLayer}
             onDeleteLayer={deleteLayer}
           />
-
-          {/* Floating Bottom Undo/Redo Pill */}
-          <Box
-            sx={{
-              position: "fixed",
-              bottom: 24,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 30,
-              backgroundColor: "#FFFFFF",
-              borderRadius: "9999px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-              border: "1px solid #ECE7DD",
-              p: 0.5,
-              px: 1.5,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <IconButton size="small" onClick={undo} disabled={!canUndo}>
-              <IconElement name="Undo" size="xs" />
-            </IconButton>
-            <IconButton size="small" onClick={redo} disabled={!canRedo}>
-              <IconElement name="Redo" size="xs" />
-            </IconButton>
-          </Box>
         </Box>
 
         {/* Right: Properties Inspector (Thuộc Tính Layer Đang Chọn) */}
@@ -170,12 +189,17 @@ export default function EditorPage({ params }: EditorPageProps) {
           selectedLayer={selectedLayer}
           canvasBg={document.backgroundColor}
           canvasHeight={document.height}
+          ambientParticle={document.ambientParticle}
+          openingEffect={document.openingEffect}
           onUpdateLayer={updateLayer}
           onDeleteLayer={deleteLayer}
+          onDuplicateLayer={duplicateLayer}
           onBringForward={bringForward}
           onSendBackward={sendBackward}
           onDeselect={() => selectLayer(null)}
           onSetBackground={setBackgroundColor}
+          onSetOpeningEffect={setOpeningEffect}
+          onSetAmbientParticle={setAmbientParticle}
           onExpandHeight={expandCanvasHeight}
         />
       </Box>
