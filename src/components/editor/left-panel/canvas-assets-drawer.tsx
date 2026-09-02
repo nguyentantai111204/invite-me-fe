@@ -349,7 +349,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                         }}
                       >
                         {/* Left: Icon + Name */}
-                        <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1 }}>
+                        <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1, overflow: "hidden" }}>
                           <StackCenter
                             sx={{
                               width: 26,
@@ -364,27 +364,34 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                             <IconElement name={getIcon()} size="xs" />
                           </StackCenter>
 
-                          <StackCol spacing={0} sx={{ minWidth: 0, flex: 1 }}>
-                            <TextElement
-                              size="xs"
-                              weight={isSelected ? "bold" : "medium"}
-                              colorVariant={isSelected ? "gold" : "primary"}
-                              sx={{
-                                fontSize: "0.75rem",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                textDecoration: layer.isHidden ? "line-through" : "none",
-                                opacity: layer.isHidden ? 0.5 : 1,
-                              }}
-                            >
-                              {layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
-                            </TextElement>
-                          </StackCol>
+                          <Tooltip
+                            title={layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
+                            placement="top-start"
+                            arrow
+                          >
+                            <Box sx={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                              <TextElement
+                                size="xs"
+                                weight={isSelected ? "bold" : "medium"}
+                                colorVariant={isSelected ? "gold" : "primary"}
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  display: "block",
+                                  textDecoration: layer.isHidden ? "line-through" : "none",
+                                  opacity: layer.isHidden ? 0.5 : 1,
+                                }}
+                              >
+                                {layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
+                              </TextElement>
+                            </Box>
+                          </Tooltip>
                         </StackRowAlignJustStart>
 
                         {/* Right: Quick Action Icons */}
-                        <StackRow sx={{ gap: "2px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                        <StackRow sx={{ gap: "1px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                           {/* Hide / Show Toggle */}
                           {onUpdateLayer && (
                             <Tooltip title={layer.isHidden ? "Hiện layer" : "Ẩn layer"} arrow>
@@ -392,7 +399,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                                 size="small"
                                 onClick={() => onUpdateLayer(layer.id, { isHidden: !layer.isHidden })}
                                 sx={{
-                                  p: 0.3,
+                                  p: "2px",
                                   color: layer.isHidden ? COLOR.textTertiary : COLOR.textSecondary,
                                   "&:hover": { color: COLOR.gold.main },
                                 }}
@@ -409,7 +416,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                                 size="small"
                                 onClick={() => onUpdateLayer(layer.id, { isLocked: !layer.isLocked })}
                                 sx={{
-                                  p: 0.3,
+                                  p: "2px",
                                   color: layer.isLocked ? COLOR.gold.main : COLOR.textTertiary,
                                   "&:hover": { color: COLOR.gold.main },
                                 }}
@@ -426,7 +433,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                                 size="small"
                                 onClick={() => onBringForward(layer.id)}
                                 sx={{
-                                  p: 0.3,
+                                  p: "2px",
                                   color: COLOR.textSecondary,
                                   "&:hover": { color: COLOR.gold.main },
                                 }}
@@ -443,7 +450,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                                 size="small"
                                 onClick={() => onSendBackward(layer.id)}
                                 sx={{
-                                  p: 0.3,
+                                  p: "2px",
                                   color: COLOR.textSecondary,
                                   "&:hover": { color: COLOR.gold.main },
                                 }}
@@ -455,14 +462,14 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
 
                           {/* Delete */}
                           {onDeleteLayer && (
-                            <Tooltip title="Xóa" arrow>
+                            <Tooltip title="Xóa layer" arrow>
                               <IconButton
                                 size="small"
                                 onClick={() => onDeleteLayer(layer.id)}
                                 sx={{
-                                  p: 0.3,
+                                  p: "2px",
                                   color: COLOR.status.error.main,
-                                  "&:hover": { color: COLOR.status.error.dark },
+                                  "&:hover": { color: COLOR.status.error.main, backgroundColor: "rgba(211, 47, 47, 0.08)" },
                                 }}
                               >
                                 <IconElement name="Delete" size="xs" />

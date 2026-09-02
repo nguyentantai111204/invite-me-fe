@@ -292,6 +292,24 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                 </Tooltip>
               )}
 
+              <Tooltip title={selectedLayer.isHidden ? "Bật hiển thị" : "Ẩn đối tượng"} arrow>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    onUpdateLayer(selectedLayer.id, { isHidden: !selectedLayer.isHidden })
+                  }
+                  sx={{
+                    borderRadius: RADIUS.xs,
+                    p: 0.5,
+                    color: selectedLayer.isHidden ? COLOR.gold.main : COLOR.textSecondary,
+                    backgroundColor: selectedLayer.isHidden ? COLOR.gold[50] : "transparent",
+                    "&:hover": { color: COLOR.gold.main, backgroundColor: COLOR.gold[50] },
+                  }}
+                >
+                  <IconElement name={selectedLayer.isHidden ? "VisibilityOff" : "Visibility"} size="xs" />
+                </IconButton>
+              </Tooltip>
+
               <Tooltip title={selectedLayer.isLocked ? "Mở khóa" : "Khóa vị trí"} arrow>
                 <IconButton
                   size="small"
@@ -324,42 +342,85 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                     },
                   }}
                 >
-                  <IconElement name="Delete" size="xs" />
+                  <IconElement name="DeleteOutlined" size="xs" />
                 </IconButton>
               </Tooltip>
             </StackRow>
           </StackRowAlignJustBetween>
 
-          {selectedLayer.isHidden && (
-            <Box
+          {selectedLayer.isLocked && (
+            <StackRowAlignJustBetween
               sx={{
                 width: "100%",
                 boxSizing: "border-box",
-                backgroundColor: "#FFFBEB",
-                border: "1px solid #FDE68A",
+                backgroundColor: COLOR.bgSecondary,
+                border: `1px solid ${COLOR.borderGoldLight}`,
                 borderRadius: RADIUS.sm,
                 p: SPACING.px8,
-                display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                gap: SPACING.px6,
               }}
             >
               <StackRow sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1 }}>
-                <IconElement name="VisibilityOff" size="xs" color="#D97706" />
-                <TextElement size="xs" sx={{ color: "#92400E", fontSize: "0.7rem", fontWeight: FONT_WEIGHT.medium }}>
+                <IconElement name="Lock" size="xs" color={COLOR.gold.main} />
+                <TextElement size="xs" colorVariant="primary" sx={{ fontSize: "0.7rem", fontWeight: FONT_WEIGHT.medium }}>
+                  Đối tượng đang bị khóa vị trí
+                </TextElement>
+              </StackRow>
+              <ButtonElement
+                variant="outline"
+                size="small"
+                rounded="xs"
+                onClick={() => onUpdateLayer(selectedLayer.id, { isLocked: false })}
+                sx={{
+                  fontSize: "0.68rem",
+                  py: 0.2,
+                  px: SPACING.px8,
+                  borderColor: COLOR.gold.main,
+                  color: COLOR.gold.main,
+                  fontWeight: FONT_WEIGHT.bold,
+                  "&:hover": { backgroundColor: COLOR.bgPaper },
+                }}
+              >
+                Mở Khóa
+              </ButtonElement>
+            </StackRowAlignJustBetween>
+          )}
+
+          {selectedLayer.isHidden && (
+            <StackRowAlignJustBetween
+              sx={{
+                width: "100%",
+                boxSizing: "border-box",
+                backgroundColor: COLOR.bgSecondary,
+                border: `1px dashed ${COLOR.borderGoldLight}`,
+                borderRadius: RADIUS.sm,
+                p: SPACING.px8,
+                alignItems: "center",
+              }}
+            >
+              <StackRow sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1 }}>
+                <IconElement name="VisibilityOff" size="xs" color={COLOR.textSecondary} />
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.7rem", fontWeight: FONT_WEIGHT.medium }}>
                   Layer này đang ở chế độ Ẩn
                 </TextElement>
               </StackRow>
               <ButtonElement
-                variant="text"
+                variant="outline"
                 size="small"
+                rounded="xs"
                 onClick={() => onUpdateLayer(selectedLayer.id, { isHidden: false })}
-                sx={{ fontSize: "0.68rem", p: 0, color: COLOR.gold.main, fontWeight: "bold" }}
+                sx={{
+                  fontSize: "0.68rem",
+                  py: 0.2,
+                  px: SPACING.px8,
+                  borderColor: COLOR.borderGoldLight,
+                  color: COLOR.textPrimary,
+                  "&:hover": { borderColor: COLOR.gold.main },
+                }}
               >
                 Hiện lại
               </ButtonElement>
-            </Box>
+            </StackRowAlignJustBetween>
           )}
 
           {/* 2. Section: Typography (Text Layer) */}

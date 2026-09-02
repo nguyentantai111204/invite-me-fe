@@ -43,7 +43,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
     setIsClient(true);
   }, []);
 
-  // Update Moveable Target when selectedId changes
+  // Update Moveable Target when selectedId or layers change, and force bounding box sync
   useEffect(() => {
     if (!isClient) return;
     if (selectedId) {
@@ -52,14 +52,18 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
     } else {
       setSelectedTarget(null);
     }
-  }, [selectedId, isClient, document.layers]);
+
+    const timer = setTimeout(() => {
+      moveableRef.current?.updateRect();
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [selectedId, isClient, document.layers, scale]);
 
   // Keyboard shortcut listener (Delete / Backspace)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (editingTextId) return;
       if ((e.key === "Delete" || e.key === "Backspace") && selectedId && onDeleteLayer) {
-        // Prevent deleting if focus is inside an input/textarea
         if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
         onDeleteLayer(selectedId);
       }
@@ -82,47 +86,61 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
     }
   };
 
+  const layersList = [...(document.layers || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+  const selectedLayer = layersList.find((l) => l.id === selectedId);
+  const editingLayer = layersList.find((l) => l.id === editingTextId) as ICanvasTextLayer | undefined;
+
   // Drag handlers for Moveable
   const handleDrag = useCallback(({ target, left, top }: OnDrag) => {
-    target.style.left = `${left}px`;
-    target.style.top = `${top}px`;
+    target.style.left = `${Math.round(left)}px`;
+    target.style.top = `${Math.round(top)}px`;
   }, []);
 
   const handleDragEnd = useCallback(
     ({ target, isDrag }: { target: HTMLElement | SVGElement; isDrag: boolean }) => {
       if (isDrag && selectedId) {
-        const x = parseFloat(target.style.left) || 0;
-        const y = parseFloat(target.style.top) || 0;
-        onUpdateLayer(selectedId, { x: Math.round(x), y: Math.round(y) });
+        const x = Math.round(parseFloat(target.style.left) || 0);
+        const y = Math.round(parseFloat(target.style.top) || 0);
+        target.style.left = "";
+        target.style.top = "";
+        onUpdateLayer(selectedId, { x, y });
       }
     },
     [onUpdateLayer, selectedId]
   );
 
   // Resize handlers for Moveable
+  const handleResizeStart = useCallback(({ setOrigin }: any) => {
+    setOrigin(["%", "%"]);
+  }, []);
+
   const handleResize = useCallback(({ target, width, height, drag }: OnResize) => {
-    target.style.width = `${width}px`;
-    target.style.height = `${height}px`;
-    target.style.left = `${drag.left}px`;
-    target.style.top = `${drag.top}px`;
+    target.style.width = `${Math.round(width)}px`;
+    target.style.height = `${Math.round(height)}px`;
+    target.style.transform = drag.transform;
   }, []);
 
   const handleResizeEnd = useCallback(
-    ({ target, isDrag }: { target: HTMLElement | SVGElement; isDrag: boolean }) => {
-      if (isDrag && selectedId) {
-        const width = parseFloat(target.style.width) || 0;
-        const height = parseFloat(target.style.height) || 0;
-        const x = parseFloat(target.style.left) || 0;
-        const y = parseFloat(target.style.top) || 0;
+    ({ target, isDrag, lastEvent }: any) => {
+      if (isDrag && selectedId && lastEvent && selectedLayer) {
+        const newWidth = Math.round(lastEvent.width);
+        const newHeight = Math.round(lastEvent.height);
+        const deltaX = Math.round(lastEvent.drag?.beforeTranslate?.[0] || 0);
+        const deltaY = Math.round(lastEvent.drag?.beforeTranslate?.[1] || 0);
+
+        target.style.transform = "";
+        target.style.width = "";
+        target.style.height = "";
+
         onUpdateLayer(selectedId, {
-          width: Math.round(width),
-          height: Math.round(height),
-          x: Math.round(x),
-          y: Math.round(y),
+          width: newWidth,
+          height: newHeight,
+          x: selectedLayer.x + deltaX,
+          y: selectedLayer.y + deltaY,
         });
       }
     },
-    [onUpdateLayer, selectedId]
+    [onUpdateLayer, selectedId, selectedLayer]
   );
 
   // Rotate handlers for Moveable
@@ -131,17 +149,16 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
   }, []);
 
   const handleRotateEnd = useCallback(
-    ({ isDrag, lastEvent }: any) => {
+    ({ target, isDrag, lastEvent }: any) => {
       if (isDrag && selectedId && lastEvent) {
-        onUpdateLayer(selectedId, { rotation: Math.round(lastEvent.rotation || 0) });
+        target.style.transform = "";
+        onUpdateLayer(selectedId, {
+          rotation: Math.round(lastEvent.rotation || 0),
+        });
       }
     },
     [onUpdateLayer, selectedId]
   );
-
-  const layersList = [...(document.layers || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
-  const selectedLayer = layersList.find((l) => l.id === selectedId);
-  const editingLayer = layersList.find((l) => l.id === editingTextId) as ICanvasTextLayer | undefined;
 
   // Guidelines for smart snapping (center, edges, and other layer bounds)
   const elementGuidelines = React.useMemo(() => {
@@ -373,6 +390,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
             throttleRotate={0}
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
+            onResizeStart={handleResizeStart}
             onResize={handleResize}
             onResizeEnd={handleResizeEnd}
             onRotate={handleRotate}

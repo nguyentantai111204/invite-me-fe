@@ -34,7 +34,7 @@ export const CanvasLayerItem = forwardRef<HTMLDivElement, CanvasLayerItemProps>(
     },
     ref
   ) => {
-    if (layer.isHidden) return null;
+    if (layer.isHidden && (!isEditorMode || !isSelected)) return null;
 
     const transformStyles = [
       layer.rotation ? `rotate(${layer.rotation}deg)` : "",
@@ -53,10 +53,13 @@ export const CanvasLayerItem = forwardRef<HTMLDivElement, CanvasLayerItemProps>(
       opacity: (layer.opacity ?? 1) * (layer.isHidden ? 0.55 : 1),
       zIndex: layer.zIndex || 1,
       transform: transformStyles || undefined,
-      cursor: isEditorMode ? (layer.isLocked ? "default" : "move") : "default",
+      cursor: isEditorMode ? (layer.isLocked ? "pointer" : "move") : "default",
       userSelect: "none",
-      pointerEvents: isEditorMode ? (layer.isLocked ? "none" : "auto") : "auto",
+      pointerEvents: "auto",
       boxSizing: "border-box",
+      outline: isEditorMode && isSelected && (layer.isLocked || layer.isHidden)
+        ? `1.5px ${layer.isHidden ? "dashed" : "solid"} ${COLOR.gold.main}`
+        : undefined,
       ...customStyle,
     };
 

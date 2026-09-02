@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ICanvasDocument,
   ICanvasLayer,
@@ -19,9 +19,25 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1);
 
-  // History state for undo/redo
+  // History state for undo/redo with synchronous refs to avoid stale closures
   const [history, setHistory] = useState<ICanvasDocument[]>([fallback]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  const documentRef = useRef<ICanvasDocument>(fallback);
+  const historyRef = useRef<ICanvasDocument[]>([fallback]);
+  const historyIndexRef = useRef<number>(0);
+
+  useEffect(() => {
+    documentRef.current = document;
+  }, [document]);
+
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+
+  useEffect(() => {
+    historyIndexRef.current = historyIndex;
+  }, [historyIndex]);
 
   // Hydrate from localStorage on client mount (prevents SSR hydration mismatch)
   useEffect(() => {
@@ -39,6 +55,9 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
               ) {
                 return { ...l, fill: "transparent" };
               }
+              if (l.id === "layer-txt-thanks" && (l.y === undefined || l.y < 300)) {
+                return { ...l, y: 1630 };
+              }
               return l;
             });
             const loadedDoc: ICanvasDocument = {
@@ -46,9 +65,12 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
               ...parsed,
               layers: sanitizedLayers,
             };
+            documentRef.current = loadedDoc;
             setDocument(loadedDoc);
             setHistory([loadedDoc]);
             setHistoryIndex(0);
+            historyRef.current = [loadedDoc];
+            historyIndexRef.current = 0;
           }
         } catch {
           // Ignore parse errors
@@ -74,16 +96,112 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
     }
   }, [document, cardId]);
 
-  const pushHistory = useCallback(
-    (newDoc: ICanvasDocument) => {
-      setHistory((prev) => {
-        const updated = prev.slice(0, historyIndex + 1);
-        return [...updated, newDoc];
-      });
-      setHistoryIndex((prev) => prev + 1);
-    },
-    [historyIndex]
-  );
+  // Synchronous document commit + history push (Eliminates React State Tearing)
+  const commitDocument = useCallback((updater: (prev: ICanvasDocument) => ICanvasDocument) => {
+    const currentDoc = documentRef.current;
+    const newDoc = updater(currentDoc);
+    documentRef.current = newDoc;
+    setDocument(newDoc);
+
+    const currentIndex = historyIndexRef.current;
+    const currentHist = historyRef.current;
+    const nextHistory = currentHist.slice(0, currentIndex + 1);
+
+    if (nextHistory.length >= 50) {
+      nextHistory.shift();
+    }
+    const updated = [...nextHistory, newDoc];
+    const newIdx = updated.length - 1;
+    historyRef.current = updated;
+    historyIndexRef.current = newIdx;
+    setHistory(updated);
+    setHistoryIndex(newIdx);
+  }, []);
+
+  const undo = useCallback(() => {
+    const currentIndex = historyIndexRef.current;
+    const currentHistory = historyRef.current;
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      const prevDoc = currentHistory[prevIndex];
+      if (prevDoc) {
+        historyIndexRef.current = prevIndex;
+        documentRef.current = prevDoc;
+        setHistoryIndex(prevIndex);
+        setDocument(prevDoc);
+        setSelectedId((currentId) => {
+          if (currentId && !prevDoc.layers.some((l) => l.id === currentId)) {
+            return null;
+          }
+          return currentId;
+        });
+      }
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    const currentIndex = historyIndexRef.current;
+    const currentHistory = historyRef.current;
+    if (currentIndex < currentHistory.length - 1) {
+      const nextIndex = currentIndex + 1;
+      const nextDoc = currentHistory[nextIndex];
+      if (nextDoc) {
+        historyIndexRef.current = nextIndex;
+        documentRef.current = nextDoc;
+        setHistoryIndex(nextIndex);
+        setDocument(nextDoc);
+        setSelectedId((currentId) => {
+          if (currentId && !nextDoc.layers.some((l) => l.id === currentId)) {
+            return null;
+          }
+          return currentId;
+        });
+      }
+    }
+  }, []);
+
+  // Global Keyboard Shortcuts for Undo (Ctrl+Z / Cmd+Z) & Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = typeof window !== "undefined" ? (window.document.activeElement as HTMLElement | null) : null;
+      const target = e.target as HTMLElement | null;
+
+      const isInputFocused =
+        (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) ||
+        (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable));
+
+      if (isInputFocused) return;
+
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      if (!isCtrlOrCmd) return;
+
+      const key = e.key ? e.key.toLowerCase() : "";
+      const code = e.code;
+
+      // Redo: Ctrl+Y OR Ctrl+Shift+Z OR Cmd+Shift+Z
+      if (
+        key === "y" ||
+        code === "KeyY" ||
+        ((key === "z" || code === "KeyZ") && e.shiftKey)
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        redo();
+        return;
+      }
+
+      // Undo: Ctrl+Z OR Cmd+Z (without shift)
+      if ((key === "z" || code === "KeyZ") && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        undo();
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [undo, redo]);
 
   const selectLayer = useCallback((id: string | null) => {
     setSelectedId(id);
@@ -91,7 +209,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
 
   const updateLayer = useCallback(
     (id: string, updates: Partial<ICanvasLayer>) => {
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
         const updatedLayers = prevLayers.map((layer) => {
           if (layer.id === id) {
@@ -99,12 +217,10 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
           }
           return layer;
         });
-        const newDoc = { ...prev, layers: updatedLayers };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: updatedLayers };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   // Helper: Auto-Placement calculates smart Y position to avoid overlapping existing layers
@@ -112,35 +228,33 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
     (preferredY?: number, height = 40): number => {
       if (preferredY !== undefined) return preferredY;
 
-      const layers = document?.layers || [];
-      // Find bottom-most layer that is not the background borders
+      const currentDoc = documentRef.current;
+      const layers = currentDoc?.layers || [];
       const contentLayers = layers.filter(
         (l) => l.id !== "layer-border-outer" && l.id !== "layer-border-inner" && !l.isHidden
       );
 
       if (contentLayers.length === 0) return 100;
 
-      // Find highest Y among visible content layers or place under currently selected
       const selected = layers.find((l) => l.id === selectedId);
       if (selected) {
         return Math.min(
-          (document?.height || 1800) - 80,
+          (currentDoc?.height || 1800) - 80,
           selected.y + (selected.height || 40) + 20
         );
       }
 
-      // Default smart place: center or below the last added item
       const maxY = Math.max(...contentLayers.map((l) => l.y + (l.height || 35)));
-      return Math.min((document?.height || 1800) - 80, maxY + 24);
+      return Math.min((currentDoc?.height || 1800) - 80, maxY + 24);
     },
-    [document?.layers, document?.height, selectedId]
+    [selectedId]
   );
 
   const addTextLayer = useCallback(
     (preset?: Partial<ICanvasTextLayer>) => {
       const id = `layer-text-${Date.now()}`;
       const smartY = calculateSmartY(preset?.y, preset?.fontSize || 24);
-      const layersCount = document?.layers?.length || 0;
+      const layersCount = documentRef.current?.layers?.length || 0;
 
       const newText: ICanvasTextLayer = {
         id,
@@ -164,22 +278,20 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         isHidden: false,
       };
 
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
-        const newDoc = { ...prev, layers: [...prevLayers, newText] };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: [...prevLayers, newText] };
       });
       setSelectedId(id);
     },
-    [calculateSmartY, document?.layers?.length, pushHistory]
+    [calculateSmartY, commitDocument]
   );
 
   const addStickerLayer = useCallback(
     (content: string, fontSize = 36) => {
       const id = `layer-sticker-${Date.now()}`;
       const smartY = calculateSmartY(undefined, fontSize);
-      const layersCount = document?.layers?.length || 0;
+      const layersCount = documentRef.current?.layers?.length || 0;
 
       const newSticker: ICanvasStickerLayer = {
         id,
@@ -199,22 +311,20 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         isHidden: false,
       };
 
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
-        const newDoc = { ...prev, layers: [...prevLayers, newSticker] };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: [...prevLayers, newSticker] };
       });
       setSelectedId(id);
     },
-    [calculateSmartY, document?.layers?.length, pushHistory]
+    [calculateSmartY, commitDocument]
   );
 
   const addImageLayer = useCallback(
     (src: string) => {
       const id = `layer-img-${Date.now()}`;
       const smartY = calculateSmartY(undefined, 220);
-      const layersCount = document?.layers?.length || 0;
+      const layersCount = documentRef.current?.layers?.length || 0;
 
       const newImg: ICanvasImageLayer = {
         id,
@@ -235,22 +345,20 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         opacity: 1,
       };
 
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
-        const newDoc = { ...prev, layers: [...prevLayers, newImg] };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: [...prevLayers, newImg] };
       });
       setSelectedId(id);
     },
-    [calculateSmartY, document?.layers?.length, pushHistory]
+    [calculateSmartY, commitDocument]
   );
 
   const addShapeLayer = useCallback(
     (shapeType: "rect" | "circle" | "divider") => {
       const id = `layer-shape-${Date.now()}`;
       const smartY = calculateSmartY(undefined, shapeType === "divider" ? 20 : 120);
-      const layersCount = document?.layers?.length || 0;
+      const layersCount = documentRef.current?.layers?.length || 0;
 
       const newShape: ICanvasShapeLayer = {
         id,
@@ -273,20 +381,18 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         isHidden: false,
       };
 
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
-        const newDoc = { ...prev, layers: [...prevLayers, newShape] };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: [...prevLayers, newShape] };
       });
       setSelectedId(id);
     },
-    [calculateSmartY, document?.layers?.length, pushHistory]
+    [calculateSmartY, commitDocument]
   );
 
   const duplicateLayer = useCallback(
     (id: string) => {
-      const layers = document?.layers || [];
+      const layers = documentRef.current?.layers || [];
       const target = layers.find((l) => l.id === id);
       if (!target) return;
 
@@ -300,34 +406,30 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         zIndex: layers.length + 1,
       };
 
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
-        const newDoc = { ...prev, layers: [...prevLayers, duplicated] };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: [...prevLayers, duplicated] };
       });
       setSelectedId(newId);
     },
-    [document?.layers, pushHistory]
+    [commitDocument]
   );
 
   const deleteLayer = useCallback(
     (id: string) => {
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
         const updated = prevLayers.filter((l) => l.id !== id);
-        const newDoc = { ...prev, layers: updated };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: updated };
       });
       setSelectedId(null);
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const bringForward = useCallback(
     (id: string) => {
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
         const index = prevLayers.findIndex((l) => l.id === id);
         if (index < 0 || index >= prevLayers.length - 1) return prev;
@@ -336,17 +438,15 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         newLayers[index] = newLayers[index + 1];
         newLayers[index + 1] = temp;
         const reindexedLayers = newLayers.map((l, i) => ({ ...l, zIndex: i + 1 }));
-        const newDoc = { ...prev, layers: reindexedLayers };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: reindexedLayers };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const sendBackward = useCallback(
     (id: string) => {
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const prevLayers = prev?.layers || [];
         const index = prevLayers.findIndex((l) => l.id === id);
         if (index <= 0) return prev;
@@ -355,50 +455,42 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         newLayers[index] = newLayers[index - 1];
         newLayers[index - 1] = temp;
         const reindexedLayers = newLayers.map((l, i) => ({ ...l, zIndex: i + 1 }));
-        const newDoc = { ...prev, layers: reindexedLayers };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, layers: reindexedLayers };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const setBackgroundColor = useCallback(
     (color: string) => {
-      setDocument((prev) => {
-        const newDoc = { ...prev, backgroundColor: color };
-        pushHistory(newDoc);
-        return newDoc;
+      commitDocument((prev) => {
+        return { ...prev, backgroundColor: color };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const setOpeningEffect = useCallback(
     (effect: CanvasOpeningEffectType) => {
-      setDocument((prev) => {
-        const newDoc = { ...prev, openingEffect: effect };
-        pushHistory(newDoc);
-        return newDoc;
+      commitDocument((prev) => {
+        return { ...prev, openingEffect: effect };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const setAmbientParticle = useCallback(
     (particle: CanvasAmbientParticleType) => {
-      setDocument((prev) => {
-        const newDoc = { ...prev, ambientParticle: particle };
-        pushHistory(newDoc);
-        return newDoc;
+      commitDocument((prev) => {
+        return { ...prev, ambientParticle: particle };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
 
   const expandCanvasHeight = useCallback(
     (delta = 300) => {
-      setDocument((prev) => {
+      commitDocument((prev) => {
         const currentHeight = prev?.height || 1800;
         const newHeight = Math.max(780, currentHeight + delta);
         const prevLayers = prev?.layers || [];
@@ -411,27 +503,11 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
           }
           return l;
         });
-        const newDoc = { ...prev, height: newHeight, layers: updatedLayers };
-        pushHistory(newDoc);
-        return newDoc;
+        return { ...prev, height: newHeight, layers: updatedLayers };
       });
     },
-    [pushHistory]
+    [commitDocument]
   );
-
-  const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      setHistoryIndex((prev) => prev - 1);
-      setDocument(history[historyIndex - 1]);
-    }
-  }, [history, historyIndex]);
-
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      setHistoryIndex((prev) => prev + 1);
-      setDocument(history[historyIndex + 1]);
-    }
-  }, [history, historyIndex]);
 
   const selectedLayer = document?.layers?.find((l) => l.id === selectedId) || null;
 
