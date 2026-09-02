@@ -20,7 +20,7 @@ export const CustomHtmlBlock: React.FC<ICustomHtmlBlockProps> = ({ data, styles 
       }}
     >
       <Container maxWidth={styles?.containerMaxWidth || "lg"}>
-        <div dangerouslySetInnerHTML={{ __html: data.htmlContent }} />
+        <Box component="div" dangerouslySetInnerHTML={{ __html: data.htmlContent }} />
       </Container>
     </Box>
   );

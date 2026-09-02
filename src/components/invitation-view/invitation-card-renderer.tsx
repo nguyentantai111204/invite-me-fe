@@ -16,7 +16,7 @@ import {
   Alert,
 } from "@mui/material";
 import { IInvitation, IRsvpSubmission } from "@/interfaces/invitation.interface";
-import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, FONT_WEIGHT, FONT_SIZE, SPACING } from "@/constants/style.constant";
 import { rsvpApi } from "@/services/api";
 import { IconName } from "@/components/shared/icon/icon-map";
 import {
@@ -28,6 +28,7 @@ import {
   StackColAlignJustCenter,
   StackRowAlignJustCenter,
   StackRowAlignJustBetween,
+  StackRowAlignJustStart,
   StackCol,
 } from "@/components/shared";
 import { SeasonalParticles } from "@/components/home-cms/atmosphere/seasonal-particles";
@@ -360,13 +361,13 @@ export const InvitationCardRenderer: React.FC<IInvitationCardRendererProps> = ({
                   <Grid size={{ xs: 12 }} key={idx}>
                     <Paper
                       elevation={1}
+                      component={StackRowAlignJustStart}
                       sx={{
-                        p: 2.5,
+                        p: SPACING.px20,
                         borderRadius: RADIUS.md,
                         border: `1px solid ${COLOR.borderGoldLight}`,
-                        backgroundColor: "#FFFFFF",
-                        display: "flex",
-                        gap: 2,
+                        backgroundColor: COLOR.bgPaper,
+                        gap: SPACING.px16,
                         alignItems: "center",
                       }}
                     >

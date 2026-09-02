@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Tooltip, IconButton, keyframes } from "@mui/material";
 import {
   ICanvasDocument,
@@ -42,6 +42,26 @@ interface ICanvasDocumentRendererProps {
 
 export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({ document }) => {
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
+
+  const docWidth = document.width || 390;
+  const docHeight = document.height || 1800;
+
+  // Responsive scale handler for smaller viewports (e.g. 360px, 375px mobile screens)
+  useEffect(() => {
+    const handleResize = () => {
+      const screenWidth = window.innerWidth;
+      if (screenWidth < docWidth) {
+        setScale(screenWidth / docWidth);
+      } else {
+        setScale(1);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [docWidth]);
 
   const handleCopyStk = (stk: string) => {
     if (typeof navigator !== "undefined") {
@@ -80,11 +100,22 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
           animationDelay: `${delay}s`,
         };
       default:
-        return {
-          animation: `${fadeInKeyframes} 0.6s ease both`,
-          animationDelay: `${delay}s`,
-        };
+        return {};
     }
+  };
+
+  const getTransformStyle = (layer: ICanvasLayer) => {
+    const transforms: string[] = [];
+    if (layer.rotation) {
+      transforms.push(`rotate(${layer.rotation}deg)`);
+    }
+    if (layer.scaleX !== undefined && layer.scaleX !== 1) {
+      transforms.push(`scaleX(${layer.scaleX})`);
+    }
+    if (layer.scaleY !== undefined && layer.scaleY !== 1) {
+      transforms.push(`scaleY(${layer.scaleY})`);
+    }
+    return transforms.length > 0 ? transforms.join(" ") : undefined;
   };
 
   return (
@@ -97,35 +128,93 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start",
+        overflowX: "hidden",
       }}
     >
-      {/* Mobile Portrait Canvas Frame (390px Width) */}
+      {/* Outer Scaled Wrapper to maintain exact canvas proportions on any screen width */}
       <Box
         sx={{
-          width: "100%",
-          maxWidth: 390,
-          minHeight: document.height || 1800,
-          backgroundColor: document.backgroundColor || COLOR.bgPrimary,
+          width: `${docWidth * scale}px`,
+          height: `${docHeight * scale}px`,
           position: "relative",
-          boxShadow: { xs: "none", sm: SHADOW.xl },
-          borderRadius: { xs: 0, sm: RADIUS.lg },
-          overflow: "hidden",
+          display: "flex",
+          justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        {document.layers
-          .filter((l) => !l.isHidden)
-          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((layer) => {
-            const animStyles = getAnimationStyles(layer);
+        {/* Mobile Portrait Canvas Frame (390px Width Base) */}
+        <Box
+          sx={{
+            width: `${docWidth}px`,
+            height: `${docHeight}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: "top center",
+            backgroundColor: document.backgroundColor || COLOR.bgPrimary,
+            position: "relative",
+            boxShadow: { xs: "none", sm: SHADOW.xl },
+            borderRadius: { xs: 0, sm: RADIUS.lg },
+            overflow: "hidden",
+          }}
+        >
+          {document.layers
+            .filter((l) => !l.isHidden)
+            .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+            .map((layer) => {
+              const animStyles = getAnimationStyles(layer);
+              const transformStyle = getTransformStyle(layer);
 
-            // Shape Layer (Outer border, inner border, divider line, card background)
-            if (layer.type === "shape") {
-              const isDivider =
-                layer.shapeType === "divider" ||
-                layer.id.includes("div") ||
-                (typeof layer.height === "number" && layer.height <= 3);
+              // 1. Shape Layer (Outer border, inner border, divider line, card background)
+              if (layer.type === "shape") {
+                const isDivider =
+                  layer.shapeType === "divider" ||
+                  layer.id.includes("div") ||
+                  (typeof layer.height === "number" && layer.height <= 3);
 
-              if (isDivider) {
+                if (isDivider) {
+                  return (
+                    <Box
+                      key={layer.id}
+                      sx={{
+                        position: "absolute",
+                        left: `${layer.x}px`,
+                        top: `${layer.y}px`,
+                        width: `${layer.width}px`,
+                        height: `${layer.height || layer.strokeWidth || 1.5}px`,
+                        backgroundColor: layer.stroke || layer.fill || COLOR.gold.main,
+                        opacity: layer.opacity ?? 1,
+                        zIndex: layer.zIndex,
+                        pointerEvents: layer.isLocked ? "none" : "auto",
+                        transform: transformStyle,
+                        ...animStyles,
+                      }}
+                    />
+                  );
+                }
+
+                if (layer.shapeType === "circle") {
+                  const radius = (layer.width || 100) / 2;
+                  return (
+                    <Box
+                      key={layer.id}
+                      sx={{
+                        position: "absolute",
+                        left: `${layer.x - radius}px`,
+                        top: `${layer.y - radius}px`,
+                        width: `${layer.width}px`,
+                        height: `${layer.height || layer.width}px`,
+                        backgroundColor: layer.fill || "transparent",
+                        border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
+                        borderRadius: RADIUS.full,
+                        opacity: layer.opacity ?? 1,
+                        zIndex: layer.zIndex,
+                        pointerEvents: layer.isLocked ? "none" : "auto",
+                        transform: transformStyle,
+                        ...animStyles,
+                      }}
+                    />
+                  );
+                }
+
                 return (
                   <Box
                     key={layer.id}
@@ -134,159 +223,128 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                       left: `${layer.x}px`,
                       top: `${layer.y}px`,
                       width: `${layer.width}px`,
-                      height: `${layer.height || layer.strokeWidth || 1.5}px`,
-                      backgroundColor: layer.stroke || layer.fill || COLOR.gold.main,
-                      opacity: layer.opacity ?? 1,
-                      zIndex: layer.zIndex,
-                      pointerEvents: layer.isLocked ? "none" : "auto",
-                      ...animStyles,
-                    }}
-                  />
-                );
-              }
-
-              if (layer.shapeType === "circle") {
-                return (
-                  <Box
-                    key={layer.id}
-                    sx={{
-                      position: "absolute",
-                      left: `${layer.x}px`,
-                      top: `${layer.y}px`,
-                      width: `${layer.width}px`,
-                      height: `${layer.height || layer.width}px`,
+                      height: `${layer.height}px`,
                       backgroundColor: layer.fill || "transparent",
                       border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
-                      borderRadius: RADIUS.full,
+                      borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
                       opacity: layer.opacity ?? 1,
                       zIndex: layer.zIndex,
                       pointerEvents: layer.isLocked ? "none" : "auto",
+                      transform: transformStyle,
                       ...animStyles,
                     }}
                   />
                 );
               }
 
-              return (
-                <Box
-                  key={layer.id}
-                  sx={{
-                    position: "absolute",
-                    left: `${layer.x}px`,
-                    top: `${layer.y}px`,
-                    width: `${layer.width}px`,
-                    height: `${layer.height}px`,
-                    backgroundColor: layer.fill || "transparent",
-                    border: layer.stroke ? `${layer.strokeWidth || 1}px solid ${layer.stroke}` : "none",
-                    borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
-                    opacity: layer.opacity ?? 1,
-                    zIndex: layer.zIndex,
-                    pointerEvents: layer.isLocked ? "none" : "auto",
-                    ...animStyles,
-                  }}
-                />
-              );
-            }
+              // 2. Image Layer (Photo arch, Couple portrait, Gallery photos, QR codes)
+              if (layer.type === "image") {
+                return (
+                  <Box
+                    key={layer.id}
+                    component="img"
+                    src={layer.src}
+                    alt={layer.name || "Wedding Image"}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width}px`,
+                      height: `${layer.height}px`,
+                      borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
+                      objectFit: "cover",
+                      opacity: layer.opacity ?? 1,
+                      zIndex: layer.zIndex,
+                      boxShadow: SHADOW.sm,
+                      transform: transformStyle,
+                      ...animStyles,
+                    }}
+                  />
+                );
+              }
 
-            // Image Layer (Photo arch, Couple portrait, Gallery photos)
-            if (layer.type === "image") {
-              return (
-                <Box
-                  key={layer.id}
-                  component="img"
-                  src={layer.src}
-                  alt={layer.name || "Wedding Image"}
-                  sx={{
-                    position: "absolute",
-                    left: `${layer.x}px`,
-                    top: `${layer.y}px`,
-                    width: `${layer.width}px`,
-                    height: `${layer.height}px`,
-                    borderRadius: layer.borderRadius ? `${layer.borderRadius}px` : "0px",
-                    objectFit: "cover",
-                    opacity: layer.opacity ?? 1,
-                    zIndex: layer.zIndex,
-                    boxShadow: SHADOW.sm,
-                    ...animStyles,
-                  }}
-                />
-              );
-            }
+              // 3. Sticker Layer (Emojis, Floral garlands, rings, badges, crests)
+              if (layer.type === "sticker") {
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: layer.width ? `${layer.width}px` : "auto",
+                      fontSize: `${layer.fontSize || 32}px`,
+                      lineHeight: 1.2,
+                      textAlign: "center",
+                      opacity: layer.opacity ?? 1,
+                      zIndex: layer.zIndex,
+                      userSelect: "none",
+                      display: "block",
+                      transform: transformStyle,
+                      ...animStyles,
+                    }}
+                  >
+                    {layer.content}
+                  </Box>
+                );
+              }
 
-            // Sticker Layer (Emojis, Floral garlands, rings, badges)
-            if (layer.type === "sticker") {
-              return (
-                <Box
-                  key={layer.id}
-                  sx={{
-                    position: "absolute",
-                    left: `${layer.x}px`,
-                    top: `${layer.y}px`,
-                    fontSize: `${layer.fontSize || 32}px`,
-                    lineHeight: 1,
-                    opacity: layer.opacity ?? 1,
-                    zIndex: layer.zIndex,
-                    userSelect: "none",
-                    ...animStyles,
-                  }}
-                >
-                  {layer.content}
-                </Box>
-              );
-            }
+              // 4. Text Layer (Typography, couple names, date, quotes, schedule, RSVP text)
+              if (layer.type === "text") {
+                const isStkText = layer.text.includes("1018899999") || layer.text.includes("190338888888");
 
-            // Text Layer (Typography, couple names, date, quotes, schedule, RSVP text)
-            if (layer.type === "text") {
-              const isStkText = layer.text.includes("1018899999") || layer.text.includes("190338888888");
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: layer.width ? `${layer.width}px` : "auto",
+                      fontFamily: layer.fontFamily || FONT_FAMILY.sans,
+                      fontSize: `${layer.fontSize}px`,
+                      fontWeight: layer.fontWeight || "normal",
+                      fontStyle: layer.fontStyle || "normal",
+                      color: layer.fill || COLOR.textPrimary,
+                      textAlign: layer.textAlign || "center",
+                      lineHeight: layer.lineHeight || 1.4,
+                      letterSpacing: layer.letterSpacing ? `${layer.letterSpacing}px` : "normal",
+                      whiteSpace: "pre-line", // Preserves \n newlines exactly like Konva Canvas
+                      wordBreak: "break-word",
+                      opacity: layer.opacity ?? 1,
+                      zIndex: layer.zIndex,
+                      transform: transformStyle,
+                      ...animStyles,
+                    }}
+                  >
+                    {layer.text}
 
-              return (
-                <Box
-                  key={layer.id}
-                  sx={{
-                    position: "absolute",
-                    left: `${layer.x}px`,
-                    top: `${layer.y}px`,
-                    width: layer.width ? `${layer.width}px` : "auto",
-                    fontFamily: layer.fontFamily || FONT_FAMILY.sans,
-                    fontSize: `${layer.fontSize}px`,
-                    fontWeight: layer.fontWeight || "normal",
-                    fontStyle: layer.fontStyle || "normal",
-                    color: layer.fill || COLOR.textPrimary,
-                    textAlign: layer.textAlign || "left",
-                    lineHeight: layer.lineHeight || 1.3,
-                    letterSpacing: layer.letterSpacing ? `${layer.letterSpacing}px` : "normal",
-                    whiteSpace: layer.width ? "normal" : "nowrap",
-                    opacity: layer.opacity ?? 1,
-                    zIndex: layer.zIndex,
-                    ...animStyles,
-                  }}
-                >
-                  {layer.text}
+                    {/* Interactive STK Copy Button for VietQR layers */}
+                    {isStkText && (
+                      <Tooltip title={copiedBank === layer.text ? "Đã sao chép!" : "Sao chép số tài khoản"}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleCopyStk(layer.text.replace(/[^0-9]/g, ""))}
+                          sx={{
+                            ml: 0.5,
+                            p: 0.25,
+                            color: COLOR.gold.main,
+                            "&:hover": { backgroundColor: "rgba(183,134,40,0.1)" },
+                          }}
+                        >
+                          <IconElement name={copiedBank === layer.text ? "Check" : "ContentCopy"} size="xs" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                );
+              }
 
-                  {/* Interactive STK Copy Button for VietQR layers */}
-                  {isStkText && (
-                    <Tooltip title={copiedBank === layer.text ? "Đã sao chép!" : "Sao chép số tài khoản"}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleCopyStk(layer.text.replace(/[^0-9]/g, ""))}
-                        sx={{
-                          ml: 0.5,
-                          p: 0.25,
-                          color: COLOR.gold.main,
-                          "&:hover": { backgroundColor: "rgba(183,134,40,0.1)" },
-                        }}
-                      >
-                        <IconElement name={copiedBank === layer.text ? "Check" : "ContentCopy"} size="xs" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </Box>
-              );
-            }
-
-            return null;
-          })}
+              return null;
+            })}
+        </Box>
       </Box>
     </Box>
   );
 };
+

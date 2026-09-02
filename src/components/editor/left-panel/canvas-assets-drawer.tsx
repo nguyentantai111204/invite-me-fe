@@ -307,7 +307,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
             ) : (
               <StackCol spacing={SPACING.px6} sx={{ width: "100%" }}>
                 {[...layers]
-                  .sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0))
+                  .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
                   .map((layer) => {
                     const isSelected = selectedId === layer.id;
                     const getIcon = (): IconName => {
@@ -695,7 +695,9 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                   >
                     <StackRowAlignJustBetween>
                       <StackRowAlignJustStart sx={{ gap: SPACING.px8 }}>
-                        <span style={{ fontSize: "1.2rem" }}>{eff.icon}</span>
+                        <Box component="span" sx={{ fontSize: "1.2rem" }}>
+                          {eff.icon}
+                        </Box>
                         <StackCol spacing={0}>
                           <TextElement
                             size="xs"
@@ -755,7 +757,9 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                       },
                     }}
                   >
-                    <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
+                    <Box component="span" sx={{ fontSize: "1.1rem" }}>
+                      {item.icon}
+                    </Box>
                     <TextElement
                       size="xs"
                       weight="semibold"
@@ -1016,7 +1020,14 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                 }}
               />
               <Tooltip title="Mở bảng màu" arrow>
-                <label style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+                <Box
+                  component="label"
+                  sx={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
                   <IconElement name="ColorLens" size="xs" color={COLOR.gold.main} />
                   <input
                     type="color"
@@ -1024,7 +1035,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                     onChange={(e) => handleCustomBgChange(e.target.value)}
                     style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
                   />
-                </label>
+                </Box>
               </Tooltip>
             </Box>
 

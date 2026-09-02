@@ -148,7 +148,7 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
         }}
       >
         <Tooltip title="Hoàn tác (Ctrl+Z)" arrow>
-          <span>
+          <Box component="span">
             <IconButton
               size="small"
               onClick={onUndo}
@@ -163,11 +163,11 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
             >
               <IconElement name="Undo" size="xs" />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
 
         <Tooltip title="Làm lại (Ctrl+Y)" arrow>
-          <span>
+          <Box component="span">
             <IconButton
               size="small"
               onClick={onRedo}
@@ -182,7 +182,7 @@ export const CanvasTopBar: React.FC<ICanvasTopBarProps> = ({
             >
               <IconElement name="Redo" size="xs" />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
 
         {/* Divider */}

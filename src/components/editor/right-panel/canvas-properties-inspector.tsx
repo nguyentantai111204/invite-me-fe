@@ -434,7 +434,9 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                 {FONT_OPTIONS.map((f) => (
                   <MenuItem key={f.value} value={f.value}>
                     <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center" }}>
-                      <span style={{ fontFamily: f.value, fontSize: "0.85rem" }}>{f.label}</span>
+                      <TextElement size="sm" sx={{ fontFamily: f.value }}>
+                        {f.label}
+                      </TextElement>
                       <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.65rem", ml: 1 }}>
                         {f.category}
                       </TextElement>
@@ -513,9 +515,9 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                     sx={{ px: SPACING.px8, border: "none" }}
                   >
                     <Tooltip title="In đậm" arrow>
-                      <span>
+                      <Box component="span">
                         <IconElement name="FormatBold" size="xs" />
-                      </span>
+                      </Box>
                     </Tooltip>
                   </ToggleButton>
 
@@ -530,9 +532,9 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                     sx={{ px: SPACING.px8, border: "none" }}
                   >
                     <Tooltip title="In nghiêng" arrow>
-                      <span>
+                      <Box component="span">
                         <IconElement name="FormatItalic" size="xs" />
-                      </span>
+                      </Box>
                     </Tooltip>
                   </ToggleButton>
                 </ToggleButtonGroup>
@@ -555,30 +557,30 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
               >
                 <ToggleButton value="left" sx={{ flex: 1, border: "none" }}>
                   <Tooltip title="Căn trái" arrow>
-                    <span>
+                    <Box component="span">
                       <IconElement name="FormatAlignLeft" size="xs" />
-                    </span>
+                    </Box>
                   </Tooltip>
                 </ToggleButton>
                 <ToggleButton value="center" sx={{ flex: 1, border: "none" }}>
                   <Tooltip title="Căn giữa" arrow>
-                    <span>
+                    <Box component="span">
                       <IconElement name="FormatAlignCenter" size="xs" />
-                    </span>
+                    </Box>
                   </Tooltip>
                 </ToggleButton>
                 <ToggleButton value="right" sx={{ flex: 1, border: "none" }}>
                   <Tooltip title="Căn phải" arrow>
-                    <span>
+                    <Box component="span">
                       <IconElement name="FormatAlignRight" size="xs" />
-                    </span>
+                    </Box>
                   </Tooltip>
                 </ToggleButton>
                 <ToggleButton value="justify" sx={{ flex: 1, border: "none" }}>
                   <Tooltip title="Căn đều" arrow>
-                    <span>
+                    <Box component="span">
                       <IconElement name="FormatAlignJustify" size="xs" />
-                    </span>
+                    </Box>
                   </Tooltip>
                 </ToggleButton>
               </ToggleButtonGroup>
@@ -898,7 +900,9 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                 <MenuItem key={opt.value} value={opt.value}>
                   <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center" }}>
                     <IconElement name={opt.icon} size="xs" color={COLOR.gold.main} />
-                    <span style={{ fontSize: "0.8rem" }}>{opt.label}</span>
+                    <TextElement size="xs" sx={{ fontSize: "0.8rem" }}>
+                      {opt.label}
+                    </TextElement>
                   </StackRowAlignJustStart>
                 </MenuItem>
               ))}
@@ -1214,10 +1218,12 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                 {OPENING_OPTIONS.map((opt) => (
                   <MenuItem key={opt.value} value={opt.value}>
                     <StackCol spacing={0}>
-                      <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{opt.label}</span>
-                      <span style={{ fontSize: "0.68rem", color: COLOR.textSecondary }}>
+                      <TextElement size="xs" weight="semibold" sx={{ fontSize: "0.8rem" }}>
+                        {opt.label}
+                      </TextElement>
+                      <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem" }}>
                         {opt.desc}
-                      </span>
+                      </TextElement>
                     </StackCol>
                   </MenuItem>
                 ))}
@@ -1256,10 +1262,12 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                 {PARTICLE_OPTIONS.map((opt) => (
                   <MenuItem key={opt.value} value={opt.value}>
                     <StackCol spacing={0}>
-                      <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{opt.label}</span>
-                      <span style={{ fontSize: "0.68rem", color: COLOR.textSecondary }}>
+                      <TextElement size="xs" weight="semibold" sx={{ fontSize: "0.8rem" }}>
+                        {opt.label}
+                      </TextElement>
+                      <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem" }}>
                         {opt.desc}
-                      </span>
+                      </TextElement>
                     </StackCol>
                   </MenuItem>
                 ))}

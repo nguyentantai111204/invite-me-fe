@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Box, keyframes } from "@mui/material";
 import { IInvitation } from "@/interfaces/invitation.interface";
 import { CanvasOpeningEffectType } from "@/interfaces/canvas-editor.interface";
-import { COLOR, RADIUS, SHADOW } from "@/constants/style.constant";
+import { COLOR, RADIUS, SHADOW, SPACING } from "@/constants/style.constant";
 import {
   HeadingElement,
   TextElement,
@@ -72,22 +72,19 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
   };
 
   return (
-    <Box
+    <StackCenter
       sx={{
         position: "fixed",
         inset: 0,
         zIndex: 9999,
         background: `radial-gradient(ellipse at 50% 40%, #2A241E 0%, #120F0D 100%)`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 2,
+        p: SPACING.px16,
         opacity: isFadingOut ? 0 : 1,
         transition: "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
         pointerEvents: isFadingOut ? "none" : "auto",
       }}
     >
-      <StackColAlignJustCenter spacing={4} sx={{ width: "100%", maxWidth: 430 }}>
+      <StackColAlignJustCenter spacing={SPACING.px32} sx={{ width: "100%", maxWidth: 430 }}>
         {/* ================= 1. ENVELOPE 3D OPENING ================= */}
         {openingEffect === "envelope-3d" && (
           <Box
@@ -111,27 +108,23 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
             <Box sx={{ position: "absolute", inset: 0, backgroundColor: "#D8C5AE", zIndex: 1 }} />
 
             {/* Sliding Letter Card Inside */}
-            <Box
+            <StackColAlignJustCenter
               sx={{
                 position: "absolute",
                 top: 20,
                 left: 20,
                 right: 20,
                 height: 230,
-                backgroundColor: "#FFFDF9",
+                backgroundColor: COLOR.bgPaper,
                 borderRadius: RADIUS.sm,
                 border: `1.5px solid ${COLOR.borderGold}`,
-                p: 3,
+                p: SPACING.px24,
                 textAlign: "center",
                 boxShadow: SHADOW.md,
                 transition: "all 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
                 transform: isOpen ? "translateY(-130px) scale(1.04)" : "translateY(0px)",
                 opacity: isOpen ? 1 : 0,
                 zIndex: isOpen ? 10 : 2,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
               }}
             >
               <TextElement size="xs" weight="bold" colorVariant="gold" letterSpacingType="widest" sx={{ mb: 1 }}>
@@ -157,7 +150,7 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
                   Kính gửi: {guestName}
                 </TextElement>
               )}
-            </Box>
+            </StackColAlignJustCenter>
 
             {/* Envelope Front Pocket */}
             <Box sx={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>
@@ -225,7 +218,7 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
             }}
           >
             {/* Left Gate Door */}
-            <Box
+            <StackCenter
               sx={{
                 position: "absolute",
                 top: 0,
@@ -233,25 +226,23 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
                 width: "50%",
                 height: "100%",
                 backgroundColor: "#1A1512",
-                border: "2px solid #C59B4B",
-                borderRight: "1px solid #C59B4B",
+                border: `2px solid ${COLOR.borderGold}`,
+                borderRight: `1px solid ${COLOR.borderGold}`,
                 borderTopLeftRadius: RADIUS.md,
                 borderBottomLeftRadius: RADIUS.md,
                 transformOrigin: "left center",
                 transition: "transform 1s cubic-bezier(0.4, 0, 0.2, 1)",
                 transform: isOpen ? "rotateY(-130deg)" : "rotateY(0deg)",
                 zIndex: 5,
-                display: "flex",
-                alignItems: "center",
                 justifyContent: "flex-end",
-                pr: 2,
+                pr: SPACING.px16,
               }}
             >
               <Box sx={{ fontSize: "2rem" }}>⚜️</Box>
-            </Box>
+            </StackCenter>
 
             {/* Right Gate Door */}
-            <Box
+            <StackCenter
               sx={{
                 position: "absolute",
                 top: 0,
@@ -259,37 +250,31 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
                 width: "50%",
                 height: "100%",
                 backgroundColor: "#1A1512",
-                border: "2px solid #C59B4B",
-                borderLeft: "1px solid #C59B4B",
+                border: `2px solid ${COLOR.borderGold}`,
+                borderLeft: `1px solid ${COLOR.borderGold}`,
                 borderTopRightRadius: RADIUS.md,
                 borderBottomRightRadius: RADIUS.md,
                 transformOrigin: "right center",
                 transition: "transform 1s cubic-bezier(0.4, 0, 0.2, 1)",
                 transform: isOpen ? "rotateY(130deg)" : "rotateY(0deg)",
                 zIndex: 5,
-                display: "flex",
-                alignItems: "center",
                 justifyContent: "flex-start",
-                pl: 2,
+                pl: SPACING.px16,
               }}
             >
               <Box sx={{ fontSize: "2rem" }}>⚜️</Box>
-            </Box>
+            </StackCenter>
 
             {/* Inner Invitation Card Behind Gate */}
-            <Box
+            <StackColAlignJustCenter
               sx={{
                 position: "absolute",
                 inset: 0,
-                backgroundColor: "#FCFAF6",
+                backgroundColor: COLOR.bgPrimary,
                 borderRadius: RADIUS.md,
-                p: 4,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                p: SPACING.px32,
                 textAlign: "center",
-                border: "2px solid #D4AF37",
+                border: `2px solid ${COLOR.gold.main}`,
               }}
             >
               <TextElement size="xs" weight="bold" colorVariant="gold" letterSpacingType="widest" sx={{ mb: 1 }}>
@@ -301,29 +286,25 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
               <TextElement size="xs" colorVariant="secondary">
                 {formattedDate}
               </TextElement>
-            </Box>
+            </StackColAlignJustCenter>
           </Box>
         )}
 
         {/* ================= 3. VINTAGE ROYAL SCROLL 3D ================= */}
         {openingEffect === "scroll" && (
-          <Box
+          <StackColAlignJustCenter
             onClick={handleOpen}
             sx={{
               width: "100%",
               maxWidth: 390,
               height: 360,
-              backgroundColor: "#FAF6EE",
-              border: "3px solid #B78628",
+              backgroundColor: COLOR.bgSecondary,
+              border: `3px solid ${COLOR.gold.main}`,
               borderRadius: RADIUS.md,
-              p: 4,
+              p: SPACING.px32,
               cursor: isOpen ? "default" : "pointer",
               boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
               textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
               transition: "transform 0.8s ease",
               transform: isOpen ? "scale(1.05)" : "scale(1)",
             }}
@@ -338,28 +319,24 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
             <TextElement size="sm" colorVariant="secondary" sx={{ fontStyle: "italic" }}>
               {formattedDate}
             </TextElement>
-          </Box>
+          </StackColAlignJustCenter>
         )}
 
         {/* ================= 4. LUXURY FADE OPENING ================= */}
         {openingEffect === "fade" && (
-          <Box
+          <StackColAlignJustCenter
             onClick={handleOpen}
             sx={{
               width: "100%",
               maxWidth: 390,
               height: 320,
-              backgroundColor: "#FAF6EE",
-              border: "2px solid #D4AF37",
+              backgroundColor: COLOR.bgSecondary,
+              border: `2px solid ${COLOR.gold.main}`,
               borderRadius: RADIUS.md,
-              p: 4,
+              p: SPACING.px32,
               cursor: isOpen ? "default" : "pointer",
               boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
               textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
               animation: `${floatCard} 4s ease-in-out infinite`,
             }}
           >
@@ -373,7 +350,7 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
             <TextElement size="xs" colorVariant="secondary">
               {formattedDate}
             </TextElement>
-          </Box>
+          </StackColAlignJustCenter>
         )}
 
         {/* Call to action prompt text */}
@@ -385,6 +362,6 @@ export const Envelope3dExperience: React.FC<IEnvelope3dProps> = ({
           <IconElement name="AutoAwesome" size="xs" color={COLOR.textGold} />
         </StackRowAlignJustCenter>
       </StackColAlignJustCenter>
-    </Box>
+    </StackCenter>
   );
 };
