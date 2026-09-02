@@ -17,6 +17,10 @@ import {
   ICanvasTextLayer,
   ICanvasImageLayer,
   ICanvasShapeLayer,
+  ICanvasCalendarLayer,
+  ICanvasTimelineLayer,
+  ICanvasCountdownLayer,
+  ICanvasEventInfoLayer,
   CanvasElementAnimationType,
   CanvasOpeningEffectType,
   CanvasAmbientParticleType,
@@ -149,10 +153,18 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
   const isText = selectedLayer?.type === "text";
   const isImage = selectedLayer?.type === "image";
   const isShape = selectedLayer?.type === "shape";
+  const isCalendar = selectedLayer?.type === "calendar";
+  const isTimeline = selectedLayer?.type === "timeline";
+  const isCountdown = selectedLayer?.type === "countdown";
+  const isEventInfo = selectedLayer?.type === "event-info";
 
   const txtLayer = isText ? (selectedLayer as ICanvasTextLayer) : null;
   const imgLayer = isImage ? (selectedLayer as ICanvasImageLayer) : null;
   const shapeLayer = isShape ? (selectedLayer as ICanvasShapeLayer) : null;
+  const calLayer = isCalendar ? (selectedLayer as ICanvasCalendarLayer) : null;
+  const tmLayer = isTimeline ? (selectedLayer as ICanvasTimelineLayer) : null;
+  const cdLayer = isCountdown ? (selectedLayer as ICanvasCountdownLayer) : null;
+  const eiLayer = isEventInfo ? (selectedLayer as ICanvasEventInfoLayer) : null;
 
   const currentFill = txtLayer?.fill || shapeLayer?.fill || "#B78628";
 
@@ -174,6 +186,14 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
         return "Crop";
       case "sticker":
         return "AutoAwesome";
+      case "calendar":
+        return "CalendarToday";
+      case "timeline":
+        return "History";
+      case "countdown":
+        return "DashboardCustomize";
+      case "event-info":
+        return "CalendarToday";
       default:
         return "Layers";
     }
@@ -190,6 +210,14 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
         return "HÌNH KHỐI";
       case "sticker":
         return "HỌA TIẾT";
+      case "calendar":
+        return "LỊCH SAVE THE DATE";
+      case "timeline":
+        return "LỊCH TRÌNH SỰ KIỆN";
+      case "countdown":
+        return "ĐẾM NGƯỢC NGÀY CƯỚI";
+      case "event-info":
+        return "KHUNG NGÀY & GIỜ";
       default:
         return "ĐỐI TƯỢNG";
     }
@@ -713,14 +741,14 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                     Bo góc (Border Radius)
                   </TextElement>
                   <TextElement size="xs" weight="bold" colorVariant="gold">
-                    {imgLayer.borderRadius || 0}px
+                    {typeof imgLayer.borderRadius === "number" ? imgLayer.borderRadius : parseFloat(String(imgLayer.borderRadius)) || 0}px
                   </TextElement>
                 </StackRowAlignJustBetween>
                 <Slider
                   size="small"
                   min={0}
-                  max={60}
-                  value={imgLayer.borderRadius || 0}
+                  max={140}
+                  value={typeof imgLayer.borderRadius === "number" ? imgLayer.borderRadius : parseFloat(String(imgLayer.borderRadius)) || 0}
                   onChange={(_, val) => onUpdateLayer(imgLayer.id, { borderRadius: val as number })}
                   sx={{ color: COLOR.gold.main, py: 0.5 }}
                 />
@@ -898,6 +926,500 @@ export const CanvasPropertiesInspector: React.FC<ICanvasPropertiesInspectorProps
                   />
                 </label>
               </StackRowAlignJustBetween>
+            </StackCol>
+          )}
+
+          {/* 5b. Section: Calendar Specifics */}
+          {isCalendar && calLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Cài Đặt Lịch Save The Date
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                {/* Month and Year Selectors */}
+                <StackRowAlignJustBetween sx={{ gap: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.7rem", mb: 0.5 }}>
+                      Chọn Tháng
+                    </TextElement>
+                    <Select
+                      size="small"
+                      fullWidth
+                      value={calLayer.month || 11}
+                      onChange={(e) => {
+                        const m = Number(e.target.value);
+                        const y = calLayer.year || 2026;
+                        const startDayOfWeek = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+                        const daysCount = new Date(y, m, 0).getDate();
+                        onUpdateLayer(calLayer.id, {
+                          month: m,
+                          monthTitle: `Tháng ${m} / ${y}`,
+                          startDayOfWeek,
+                          daysCount,
+                          selectedDay: Math.min(calLayer.selectedDay || 20, daysCount),
+                        });
+                      }}
+                      sx={{ height: 32, fontSize: "0.78rem" }}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <MenuItem key={m} value={m} sx={{ fontSize: "0.78rem" }}>
+                          Tháng {m}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+
+                  <Box sx={{ flex: 1 }}>
+                    <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.7rem", mb: 0.5 }}>
+                      Chọn Năm
+                    </TextElement>
+                    <Select
+                      size="small"
+                      fullWidth
+                      value={calLayer.year || 2026}
+                      onChange={(e) => {
+                        const y = Number(e.target.value);
+                        const m = calLayer.month || 11;
+                        const startDayOfWeek = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+                        const daysCount = new Date(y, m, 0).getDate();
+                        onUpdateLayer(calLayer.id, {
+                          year: y,
+                          monthTitle: `Tháng ${m} / ${y}`,
+                          startDayOfWeek,
+                          daysCount,
+                          selectedDay: Math.min(calLayer.selectedDay || 20, daysCount),
+                        });
+                      }}
+                      sx={{ height: 32, fontSize: "0.78rem" }}
+                    >
+                      {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                        <MenuItem key={y} value={y} sx={{ fontSize: "0.78rem" }}>
+                          Năm {y}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+                </StackRowAlignJustBetween>
+
+                {/* Day Selection */}
+                <StackRowAlignJustBetween sx={{ width: "100%", alignItems: "center", mt: 1 }}>
+                  <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                    Ngày hôn lễ (❤️ Trái tim)
+                  </TextElement>
+                  <TextElement size="xs" weight="bold" colorVariant="gold">
+                    Ngày {calLayer.selectedDay || 20}
+                  </TextElement>
+                </StackRowAlignJustBetween>
+                <Slider
+                  size="small"
+                  min={1}
+                  max={calLayer.daysCount || 31}
+                  value={calLayer.selectedDay || 20}
+                  onChange={(_, val) => onUpdateLayer(calLayer.id, { selectedDay: val as number })}
+                  sx={{ color: COLOR.gold.main, py: 0.5 }}
+                />
+              </Box>
+            </StackCol>
+          )}
+
+          {/* 5c. Section: Countdown Specifics */}
+          {isCountdown && cdLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Cài Đặt Đếm Ngược
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                  Tiêu đề đếm ngược
+                </TextElement>
+                <input
+                  type="text"
+                  value={cdLayer.title || "Đếm ngược đến giờ sự kiện"}
+                  onChange={(e) => onUpdateLayer(cdLayer.id, { title: e.target.value })}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                  }}
+                />
+
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem", mt: 1 }}>
+                  Chọn Ngày & Giờ cử hành sự kiện
+                </TextElement>
+                <input
+                  type="datetime-local"
+                  value={cdLayer.targetDate || "2026-11-20T18:00"}
+                  onChange={(e) => {
+                    const targetStr = e.target.value;
+                    const targetTime = new Date(targetStr).getTime();
+                    const now = Date.now();
+                    const diff = Math.max(0, targetTime - now);
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                    onUpdateLayer(cdLayer.id, {
+                      targetDate: targetStr,
+                      days,
+                      hours,
+                      minutes,
+                    });
+                  }}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+
+                <StackRowAlignJustBetween sx={{ gap: 1, mt: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <TextElement size="xs" sx={{ fontSize: "0.68rem" }}>Ngày</TextElement>
+                    <input
+                      type="number"
+                      value={cdLayer.days !== undefined ? cdLayer.days : 13}
+                      onChange={(e) => onUpdateLayer(cdLayer.id, { days: parseInt(e.target.value) || 0 })}
+                      style={{ width: "100%", padding: "4px", fontSize: "0.8rem", borderRadius: 4, border: `1px solid ${COLOR.borderGoldLight}` }}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <TextElement size="xs" sx={{ fontSize: "0.68rem" }}>Giờ</TextElement>
+                    <input
+                      type="number"
+                      value={cdLayer.hours !== undefined ? cdLayer.hours : 15}
+                      onChange={(e) => onUpdateLayer(cdLayer.id, { hours: parseInt(e.target.value) || 0 })}
+                      style={{ width: "100%", padding: "4px", fontSize: "0.8rem", borderRadius: 4, border: `1px solid ${COLOR.borderGoldLight}` }}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <TextElement size="xs" sx={{ fontSize: "0.68rem" }}>Phút</TextElement>
+                    <input
+                      type="number"
+                      value={cdLayer.minutes !== undefined ? cdLayer.minutes : 48}
+                      onChange={(e) => onUpdateLayer(cdLayer.id, { minutes: parseInt(e.target.value) || 0 })}
+                      style={{ width: "100%", padding: "4px", fontSize: "0.8rem", borderRadius: 4, border: `1px solid ${COLOR.borderGoldLight}` }}
+                    />
+                  </Box>
+                </StackRowAlignJustBetween>
+              </Box>
+            </StackCol>
+          )}
+
+          {/* 5d. Section: Event Info Specifics */}
+          {isEventInfo && eiLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Cài Đặt Khung Ngày & Giờ
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                {/* Chọn Ngày Cưới */}
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                  📅 Chọn Ngày Cưới
+                </TextElement>
+                <input
+                  type="date"
+                  onChange={(e) => {
+                    const dateVal = e.target.value;
+                    if (dateVal) {
+                      const d = new Date(dateVal + "T00:00:00");
+                      const daysMap = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+                      const dayOfWeek = daysMap[d.getDay()];
+                      const dd = String(d.getDate()).padStart(2, "0");
+                      const mm = String(d.getMonth() + 1).padStart(2, "0");
+                      const yyyy = d.getFullYear();
+                      const formatted = `${dayOfWeek}\n${dd}.${mm}.${yyyy}`;
+                      onUpdateLayer(eiLayer.id, { dateValue: formatted });
+                    }
+                  }}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem", mt: 1 }}>
+                  Hiển thị Cột Ngày (Chỉnh tay nếu muốn)
+                </TextElement>
+                <textarea
+                  rows={2}
+                  value={eiLayer.dateValue || "Chủ Nhật\n20.11.2026"}
+                  onChange={(e) => onUpdateLayer(eiLayer.id, { dateValue: e.target.value })}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                    resize: "none",
+                  }}
+                />
+
+                <Divider sx={{ my: 1, borderColor: COLOR.divider }} />
+
+                {/* Chọn Giờ Đón Khách */}
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                  🕒 Chọn Giờ Cử Hành
+                </TextElement>
+                <StackRowAlignJustBetween sx={{ gap: 1 }}>
+                  <Select
+                    size="small"
+                    defaultValue="Đón khách"
+                    onChange={(e) => {
+                      const prefix = e.target.value;
+                      const timeOnly = eiLayer.timeValue.split("\n")[1] || "18:00";
+                      onUpdateLayer(eiLayer.id, { timeValue: `${prefix}\n${timeOnly}` });
+                    }}
+                    sx={{ flex: 1, height: 32, fontSize: "0.75rem" }}
+                  >
+                    <MenuItem value="Đón khách" sx={{ fontSize: "0.75rem" }}>Đón khách</MenuItem>
+                    <MenuItem value="Lễ thành hôn" sx={{ fontSize: "0.75rem" }}>Lễ thành hôn</MenuItem>
+                    <MenuItem value="Khai tiệc" sx={{ fontSize: "0.75rem" }}>Khai tiệc</MenuItem>
+                    <MenuItem value="Giờ đẹp" sx={{ fontSize: "0.75rem" }}>Giờ đẹp</MenuItem>
+                  </Select>
+
+                  <input
+                    type="time"
+                    defaultValue="18:00"
+                    onChange={(e) => {
+                      const t = e.target.value;
+                      const prefix = eiLayer.timeValue.split("\n")[0] || "Đón khách";
+                      onUpdateLayer(eiLayer.id, { timeValue: `${prefix}\n${t}` });
+                    }}
+                    style={{
+                      border: `1px solid ${COLOR.borderGoldLight}`,
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      fontSize: "0.8rem",
+                      outline: "none",
+                      width: "100px",
+                    }}
+                  />
+                </StackRowAlignJustBetween>
+
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem", mt: 1 }}>
+                  Hiển thị Cột Giờ (Chỉnh tay nếu muốn)
+                </TextElement>
+                <textarea
+                  rows={2}
+                  value={eiLayer.timeValue || "Đón khách\n18:00"}
+                  onChange={(e) => onUpdateLayer(eiLayer.id, { timeValue: e.target.value })}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                    resize: "none",
+                  }}
+                />
+              </Box>
+            </StackCol>
+          )}
+
+          {/* 5e. Section: Timeline Specifics */}
+          {isTimeline && tmLayer && (
+            <StackCol spacing={SPACING.px12} sx={{ width: "100%" }}>
+              <TextElement
+                size="xs"
+                weight="bold"
+                colorVariant="secondary"
+                sx={{ textTransform: "uppercase", fontSize: "0.68rem", letterSpacing: "0.05em" }}
+              >
+                Cài Đặt Lịch Trình Sự Kiện
+              </TextElement>
+
+              <Box sx={SECTION_CARD_SX}>
+                <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.72rem" }}>
+                  Tiêu đề lịch trình
+                </TextElement>
+                <input
+                  type="text"
+                  value={tmLayer.title || "LỊCH TRÌNH SỰ KIỆN"}
+                  onChange={(e) => onUpdateLayer(tmLayer.id, { title: e.target.value })}
+                  style={{
+                    border: `1px solid ${COLOR.borderGoldLight}`,
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    fontSize: "0.8rem",
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+
+                <Divider sx={{ my: 1, borderColor: COLOR.divider }} />
+
+                <TextElement size="xs" weight="bold" sx={{ fontSize: "0.72rem", color: "#851C24", mb: 0.5 }}>
+                  Danh Sách Mốc Sự Kiện ({tmLayer.items?.length || 0} mốc)
+                </TextElement>
+
+                <StackCol spacing={SPACING.px8}>
+                  {tmLayer.items?.map((item, idx) => (
+                    <Box
+                      key={idx}
+                      sx={{
+                        p: "8px 10px",
+                        borderRadius: RADIUS.sm,
+                        border: `1px solid ${COLOR.borderGoldLight}`,
+                        backgroundColor: COLOR.bgPaper,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <StackRowAlignJustBetween sx={{ alignItems: "center" }}>
+                        <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ fontSize: "0.7rem" }}>
+                          Mốc {idx + 1}
+                        </TextElement>
+                        {tmLayer.items.length > 1 && (
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const newItems = tmLayer.items.filter((_, i) => i !== idx);
+                              onUpdateLayer(tmLayer.id, { items: newItems, height: Math.max(160, newItems.length * 48 + 50) });
+                            }}
+                            sx={{ p: 0.25, color: COLOR.status.error.main }}
+                          >
+                            <IconElement name="Delete" size="xs" />
+                          </IconButton>
+                        )}
+                      </StackRowAlignJustBetween>
+
+                      {/* Time selector/input */}
+                      <StackRowAlignJustBetween sx={{ gap: 1, alignItems: "center" }}>
+                        <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", width: 50 }}>
+                          Thời gian
+                        </TextElement>
+                        <input
+                          type="time"
+                          value={item.time || "18:00"}
+                          onChange={(e) => {
+                            const newItems = [...tmLayer.items];
+                            newItems[idx] = { ...newItems[idx], time: e.target.value };
+                            onUpdateLayer(tmLayer.id, { items: newItems });
+                          }}
+                          style={{
+                            border: `1px solid ${COLOR.borderGoldLight}`,
+                            borderRadius: 4,
+                            padding: "3px 6px",
+                            fontSize: "0.78rem",
+                            outline: "none",
+                            flex: 1,
+                          }}
+                        />
+                      </StackRowAlignJustBetween>
+
+                      {/* Title input */}
+                      <StackRowAlignJustBetween sx={{ gap: 1, alignItems: "center" }}>
+                        <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", width: 50 }}>
+                          Sự kiện
+                        </TextElement>
+                        <input
+                          type="text"
+                          value={item.title || ""}
+                          placeholder="Tên mốc sự kiện"
+                          onChange={(e) => {
+                            const newItems = [...tmLayer.items];
+                            newItems[idx] = { ...newItems[idx], title: e.target.value };
+                            onUpdateLayer(tmLayer.id, { items: newItems });
+                          }}
+                          style={{
+                            border: `1px solid ${COLOR.borderGoldLight}`,
+                            borderRadius: 4,
+                            padding: "3px 6px",
+                            fontSize: "0.78rem",
+                            outline: "none",
+                            flex: 1,
+                          }}
+                        />
+                      </StackRowAlignJustBetween>
+
+                      {/* SubTitle input */}
+                      <StackRowAlignJustBetween sx={{ gap: 1, alignItems: "center" }}>
+                        <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", width: 50 }}>
+                          Ghi chú
+                        </TextElement>
+                        <input
+                          type="text"
+                          value={item.subTitle || ""}
+                          placeholder="Mô tả phụ (không bắt buộc)"
+                          onChange={(e) => {
+                            const newItems = [...tmLayer.items];
+                            newItems[idx] = { ...newItems[idx], subTitle: e.target.value };
+                            onUpdateLayer(tmLayer.id, { items: newItems });
+                          }}
+                          style={{
+                            border: `1px solid ${COLOR.borderGoldLight}`,
+                            borderRadius: 4,
+                            padding: "3px 6px",
+                            fontSize: "0.75rem",
+                            outline: "none",
+                            flex: 1,
+                          }}
+                        />
+                      </StackRowAlignJustBetween>
+                    </Box>
+                  ))}
+                </StackCol>
+
+                {/* Add new milestone button */}
+                <ButtonElement
+                  variant="outline"
+                  size="small"
+                  fullWidth
+                  rounded="sm"
+                  onClick={() => {
+                    const currentItems = tmLayer.items || [];
+                    const newItems = [
+                      ...currentItems,
+                      { time: "20:00", title: "Sự kiện mới", subTitle: "Mô tả chi tiết" },
+                    ];
+                    onUpdateLayer(tmLayer.id, {
+                      items: newItems,
+                      height: Math.max(160, newItems.length * 48 + 50),
+                    });
+                  }}
+                  leftIcon={<IconElement name="Add" size="xs" />}
+                  sx={{
+                    mt: 1,
+                    height: 32,
+                    fontSize: "0.75rem",
+                    borderColor: COLOR.borderGoldLight,
+                    "&:hover": { borderColor: COLOR.gold.main },
+                  }}
+                >
+                  Thêm Mốc Sự Kiện Mới
+                </ButtonElement>
+              </Box>
             </StackCol>
           )}
 

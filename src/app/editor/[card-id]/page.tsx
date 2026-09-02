@@ -47,6 +47,7 @@ export default function EditorPage({ params }: EditorPageProps) {
   const {
     document,
     selectedId,
+    selectedIds,
     selectedLayer,
     scale,
     setScale,
@@ -54,10 +55,17 @@ export default function EditorPage({ params }: EditorPageProps) {
     canRedo,
     selectLayer,
     updateLayer,
+    moveMultipleLayers,
+    groupLayers,
+    ungroupLayers,
     addTextLayer,
     addImageLayer,
     addStickerLayer,
     addShapeLayer,
+    addCalendarLayer,
+    addTimelineLayer,
+    addCountdownLayer,
+    addEventInfoLayer,
     duplicateLayer,
     deleteLayer,
     bringForward,
@@ -88,11 +96,9 @@ export default function EditorPage({ params }: EditorPageProps) {
   }, []);
 
   const handleCopyPublicLink = () => {
-    if (typeof navigator !== "undefined") {
-      const publicUrl = `${window.location.origin}/i/${cardId}`;
-      navigator.clipboard.writeText(publicUrl);
-      setSnackbarMessage(`Đã sao chép link thiệp: ${publicUrl}`);
-    }
+    const url = `${window.location.origin}/i/${cardId}`;
+    navigator.clipboard.writeText(url);
+    setSnackbarMessage("Đã sao chép liên kết thiệp công khai!");
   };
 
   const viewportRef = React.useRef<HTMLDivElement>(null);
@@ -139,10 +145,13 @@ export default function EditorPage({ params }: EditorPageProps) {
         <CanvasAssetsDrawer
           layers={document.layers}
           selectedId={selectedId}
+          selectedIds={selectedIds}
           openingEffect={document.openingEffect}
           ambientParticle={document.ambientParticle}
           onSelectLayer={selectLayer}
           onUpdateLayer={updateLayer}
+          onGroupLayers={groupLayers}
+          onUngroupLayers={ungroupLayers}
           onDeleteLayer={deleteLayer}
           onDuplicateLayer={duplicateLayer}
           onBringForward={bringForward}
@@ -153,6 +162,10 @@ export default function EditorPage({ params }: EditorPageProps) {
           onAddSticker={addStickerLayer}
           onAddShape={addShapeLayer}
           onAddImage={addImageLayer}
+          onAddCalendar={addCalendarLayer}
+          onAddTimeline={addTimelineLayer}
+          onAddCountdown={addCountdownLayer}
+          onAddEventInfo={addEventInfoLayer}
           onSetBackground={setBackgroundColor}
         />
 
@@ -176,9 +189,13 @@ export default function EditorPage({ params }: EditorPageProps) {
           <CanvasStage
             document={document}
             selectedId={selectedId}
+            selectedIds={selectedIds}
             scale={scale}
             onSelectLayer={selectLayer}
             onUpdateLayer={updateLayer}
+            onMoveMultipleLayers={moveMultipleLayers}
+            onGroupLayers={groupLayers}
+            onUngroupLayers={ungroupLayers}
             onDuplicateLayer={duplicateLayer}
             onDeleteLayer={deleteLayer}
           />

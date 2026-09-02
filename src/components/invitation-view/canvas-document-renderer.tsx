@@ -340,6 +340,391 @@ export const CanvasDocumentRenderer: React.FC<ICanvasDocumentRendererProps> = ({
                 );
               }
 
+              // 5. Calendar Layer
+              if (layer.type === "calendar") {
+                const daysOfWeek = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+                const startOffset = layer.startDayOfWeek !== undefined ? layer.startDayOfWeek : 6;
+                const totalDays = layer.daysCount || 30;
+                const primary = layer.primaryColor || "#851C24";
+
+                const gridCells: (number | null)[] = [];
+                for (let i = 0; i < startOffset; i++) gridCells.push(null);
+                for (let d = 1; d <= totalDays; d++) gridCells.push(d);
+
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width || 300}px`,
+                      backgroundColor: layer.backgroundColor || "#FFFFFF",
+                      border: `1px solid ${layer.accentColor || "#EBDBC8"}`,
+                      borderRadius: "18px",
+                      boxShadow: "0 8px 24px -6px rgba(133, 28, 36, 0.08)",
+                      p: "14px 18px",
+                      boxSizing: "border-box",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      zIndex: layer.zIndex,
+                      transform: transformStyle,
+                      ...animStyles,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        color: primary,
+                        mb: "6px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {layer.monthTitle || "Tháng 11 / 2026"}
+                    </Box>
+                    <Box sx={{ width: "100%", height: "1px", backgroundColor: "#EBDBC8", mb: "10px" }} />
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        width: "100%",
+                        textAlign: "center",
+                        mb: "6px",
+                      }}
+                    >
+                      {daysOfWeek.map((dow, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            fontSize: "10.5px",
+                            fontWeight: "600",
+                            color: "#9E6B38",
+                            fontFamily: "Inter, sans-serif",
+                          }}
+                        >
+                          {dow}
+                        </Box>
+                      ))}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        width: "100%",
+                        rowGap: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {gridCells.map((day, idx) => {
+                        if (day === null) {
+                          return <Box key={idx} sx={{ height: 24 }} />;
+                        }
+                        const isEventDay = day === layer.selectedDay;
+                        return (
+                          <Box
+                            key={idx}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              height: 24,
+                            }}
+                          >
+                            {isEventDay ? (
+                              <Box
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: "50%",
+                                  backgroundColor: primary,
+                                  color: "#FFFFFF",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "10.5px",
+                                  fontWeight: "bold",
+                                  boxShadow: `0 2px 6px ${primary}66`,
+                                }}
+                              >
+                                {day}
+                              </Box>
+                            ) : (
+                              <Box
+                                sx={{
+                                  fontSize: "11px",
+                                  fontWeight: "500",
+                                  color: "#4A3E31",
+                                  fontFamily: "Inter, sans-serif",
+                                }}
+                              >
+                                {day}
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                );
+              }
+
+              // 6. Timeline Layer
+              if (layer.type === "timeline") {
+                const primary = layer.primaryColor || "#851C24";
+                const accent = layer.accentColor || "#D4AF37";
+
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width || 340}px`,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      zIndex: layer.zIndex,
+                      transform: transformStyle,
+                      boxSizing: "border-box",
+                      ...animStyles,
+                    }}
+                  >
+                    {layer.title && (
+                      <Box
+                        sx={{
+                          fontFamily: "'Playfair Display', serif",
+                          fontSize: "15px",
+                          fontWeight: "bold",
+                          color: primary,
+                          letterSpacing: "2px",
+                          textAlign: "center",
+                          mb: "14px",
+                        }}
+                      >
+                        {layer.title}
+                      </Box>
+                    )}
+
+                    <Box sx={{ width: "100%", position: "relative" }}>
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: "64px",
+                          top: "8px",
+                          bottom: "8px",
+                          width: "1.5px",
+                          backgroundColor: accent,
+                        }}
+                      />
+
+                      {layer.items?.map((item, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            mb: idx === layer.items.length - 1 ? 0 : "14px",
+                            position: "relative",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: "52px",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              color: primary,
+                              fontFamily: "Inter, sans-serif",
+                              textAlign: "right",
+                              pr: "10px",
+                              lineHeight: "18px",
+                            }}
+                          >
+                            {item.time}
+                          </Box>
+
+                          <Box
+                            sx={{
+                              width: 9,
+                              height: 9,
+                              borderRadius: "50%",
+                              backgroundColor: primary,
+                              border: "2px solid #FAF7F2",
+                              boxShadow: `0 0 0 1px ${accent}`,
+                              mt: "4px",
+                              mr: "12px",
+                              flexShrink: 0,
+                              zIndex: 2,
+                            }}
+                          />
+
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                color: "#3B2F23",
+                                fontFamily: "Inter, sans-serif",
+                                lineHeight: "18px",
+                              }}
+                            >
+                              {item.title}
+                            </Box>
+                            {item.subTitle && (
+                              <Box
+                                sx={{
+                                  fontSize: "10.5px",
+                                  color: "#7A6A58",
+                                  fontFamily: "Inter, sans-serif",
+                                  mt: "1px",
+                                  lineHeight: 1.3,
+                                }}
+                              >
+                                {item.subTitle}
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                );
+              }
+
+              // 7. Countdown Layer
+              if (layer.type === "countdown") {
+                const primary = layer.primaryColor || "#851C24";
+
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width || 300}px`,
+                      backgroundColor: layer.backgroundColor || "#FFFFFF",
+                      border: `1px solid #EBDBC8`,
+                      borderRadius: "16px",
+                      boxShadow: "0 8px 24px -6px rgba(133, 28, 36, 0.08)",
+                      p: "12px 16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      boxSizing: "border-box",
+                      zIndex: layer.zIndex,
+                      transform: transformStyle,
+                      ...animStyles,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontStyle: "italic",
+                        fontSize: "13.5px",
+                        fontWeight: "bold",
+                        color: primary,
+                        mb: "8px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {layer.title || "Đếm ngược đến giờ sự kiện"}
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "18px", width: "100%" }}>
+                      {[
+                        { val: layer.days !== undefined ? layer.days : 13, label: "Ngày" },
+                        { val: layer.hours !== undefined ? layer.hours : 15, label: "Giờ" },
+                        { val: layer.minutes !== undefined ? layer.minutes : 48, label: "Phút" },
+                      ].map((unit, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            minWidth: 48,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              fontSize: "20px",
+                              fontWeight: "bold",
+                              color: primary,
+                              fontFamily: "Inter, sans-serif",
+                              lineHeight: 1,
+                            }}
+                          >
+                            {String(unit.val).padStart(2, "0")}
+                          </Box>
+                          <Box
+                            sx={{
+                              fontSize: "10.5px",
+                              fontWeight: "600",
+                              color: "#851C24",
+                              fontFamily: "Inter, sans-serif",
+                              mt: "3px",
+                            }}
+                          >
+                            {unit.label}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                );
+              }
+
+              // 8. Event Info Layer
+              if (layer.type === "event-info") {
+                const primary = layer.primaryColor || "#851C24";
+                const accent = layer.accentColor || "#E2D3BE";
+
+                return (
+                  <Box
+                    key={layer.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${layer.x}px`,
+                      top: `${layer.y}px`,
+                      width: `${layer.width || 340}px`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-around",
+                      zIndex: layer.zIndex,
+                      transform: transformStyle,
+                      boxSizing: "border-box",
+                      ...animStyles,
+                    }}
+                  >
+                    <Box sx={{ textAlign: "center", flex: 1 }}>
+                      <Box sx={{ fontSize: "10.5px", fontWeight: "bold", color: "#9E6B38", letterSpacing: 1.2, mb: "3px" }}>
+                        📅 {layer.dateLabel || "NGÀY"}
+                      </Box>
+                      <Box sx={{ fontSize: "12.5px", fontWeight: "bold", color: primary, lineHeight: 1.35, whiteSpace: "pre-line" }}>
+                        {layer.dateValue}
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ width: "1.5px", height: "42px", backgroundColor: accent, mx: "6px" }} />
+
+                    <Box sx={{ textAlign: "center", flex: 1 }}>
+                      <Box sx={{ fontSize: "10.5px", fontWeight: "bold", color: "#9E6B38", letterSpacing: 1.2, mb: "3px" }}>
+                        🕒 {layer.timeLabel || "GIỜ"}
+                      </Box>
+                      <Box sx={{ fontSize: "12.5px", fontWeight: "bold", color: primary, lineHeight: 1.35, whiteSpace: "pre-line" }}>
+                        {layer.timeValue}
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              }
+
               return null;
             })}
         </Box>

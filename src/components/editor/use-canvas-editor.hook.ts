@@ -8,6 +8,10 @@ import {
   ICanvasImageLayer,
   ICanvasStickerLayer,
   ICanvasShapeLayer,
+  ICanvasCalendarLayer,
+  ICanvasTimelineLayer,
+  ICanvasCountdownLayer,
+  ICanvasEventInfoLayer,
   CanvasOpeningEffectType,
   CanvasAmbientParticleType,
 } from "@/interfaces/canvas-editor.interface";
@@ -16,8 +20,11 @@ import { INITIAL_WEDDING_CANVAS } from "./preset-canvas-data";
 export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) => {
   const fallback = initialDoc || INITIAL_WEDDING_CANVAS;
   const [document, setDocument] = useState<ICanvasDocument>(fallback);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scale, setScale] = useState<number>(1);
+
+  const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
+  const setSelectedId = useCallback((id: string | null) => setSelectedIds(id ? [id] : []), []);
 
   // History state for undo/redo with synchronous refs to avoid stale closures
   const [history, setHistory] = useState<ICanvasDocument[]>([fallback]);
@@ -26,6 +33,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
   const documentRef = useRef<ICanvasDocument>(fallback);
   const historyRef = useRef<ICanvasDocument[]>([fallback]);
   const historyIndexRef = useRef<number>(0);
+  const selectedIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     documentRef.current = document;
@@ -39,6 +47,10 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
     historyIndexRef.current = historyIndex;
   }, [historyIndex]);
 
+  useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+  }, [selectedIds]);
+
   // Hydrate from localStorage on client mount (prevents SSR hydration mismatch)
   useEffect(() => {
     if (typeof window !== "undefined" && cardId) {
@@ -46,7 +58,8 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed && Array.isArray(parsed.layers) && parsed.layers.length > 0) {
+          // If stored canvas is outdated (old version had < 24 layers), auto-upgrade to rich preset
+          if (parsed && Array.isArray(parsed.layers) && parsed.layers.length >= 24) {
             const sanitizedLayers = parsed.layers.map((l: any) => {
               if (
                 (l.id === "layer-border-outer" || l.id === "layer-border-inner") &&
@@ -54,9 +67,6 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
                 l.fill !== "transparent"
               ) {
                 return { ...l, fill: "transparent" };
-              }
-              if (l.id === "layer-txt-thanks" && (l.y === undefined || l.y < 300)) {
-                return { ...l, y: 1630 };
               }
               return l;
             });
@@ -71,51 +81,54 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
             setHistoryIndex(0);
             historyRef.current = [loadedDoc];
             historyIndexRef.current = 0;
+            return;
           }
         } catch {
-          // Ignore parse errors
+          // Fallback to preset
         }
       }
+
+      // Default load new rich INITIAL_WEDDING_CANVAS
+      documentRef.current = fallback;
+      setDocument(fallback);
+      setHistory([fallback]);
+      setHistoryIndex(0);
+      historyRef.current = [fallback];
+      historyIndexRef.current = 0;
     }
   }, [cardId, fallback]);
+
+  const resetToPreset = useCallback(() => {
+    documentRef.current = fallback;
+    setDocument(fallback);
+    setHistory([fallback]);
+    setHistoryIndex(0);
+    historyRef.current = [fallback];
+    historyIndexRef.current = 0;
+    setSelectedIds([]);
+  }, [fallback]);
 
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
 
-  // Auto-save to localStorage whenever document changes
-  useEffect(() => {
-    if (typeof window !== "undefined" && document && (cardId || document.id)) {
-      setSaveStatus("saving");
-      const storageKey = `inviteme_canvas_${cardId || document.id}`;
-      localStorage.setItem(storageKey, JSON.stringify(document));
-      const timer = setTimeout(() => {
-        setSaveStatus("saved");
-        setLastSavedTime(new Date());
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [document, cardId]);
-
-  // Synchronous document commit + history push (Eliminates React State Tearing)
+  // Synchronous document commit wrapper to avoid asynchronous state race conditions
   const commitDocument = useCallback((updater: (prev: ICanvasDocument) => ICanvasDocument) => {
     const currentDoc = documentRef.current;
     const newDoc = updater(currentDoc);
+    if (newDoc === currentDoc) return;
+
     documentRef.current = newDoc;
     setDocument(newDoc);
 
+    // Push into undo/redo history
     const currentIndex = historyIndexRef.current;
-    const currentHist = historyRef.current;
-    const nextHistory = currentHist.slice(0, currentIndex + 1);
+    const currentHistory = historyRef.current;
+    const newHistory = [...currentHistory.slice(0, currentIndex + 1), newDoc];
 
-    if (nextHistory.length >= 50) {
-      nextHistory.shift();
-    }
-    const updated = [...nextHistory, newDoc];
-    const newIdx = updated.length - 1;
-    historyRef.current = updated;
-    historyIndexRef.current = newIdx;
-    setHistory(updated);
-    setHistoryIndex(newIdx);
+    historyRef.current = newHistory;
+    historyIndexRef.current = newHistory.length - 1;
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
   }, []);
 
   const undo = useCallback(() => {
@@ -129,11 +142,8 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         documentRef.current = prevDoc;
         setHistoryIndex(prevIndex);
         setDocument(prevDoc);
-        setSelectedId((currentId) => {
-          if (currentId && !prevDoc.layers.some((l) => l.id === currentId)) {
-            return null;
-          }
-          return currentId;
+        setSelectedIds((currentIds) => {
+          return currentIds.filter((id) => prevDoc.layers.some((l) => l.id === id));
         });
       }
     }
@@ -150,17 +160,49 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
         documentRef.current = nextDoc;
         setHistoryIndex(nextIndex);
         setDocument(nextDoc);
-        setSelectedId((currentId) => {
-          if (currentId && !nextDoc.layers.some((l) => l.id === currentId)) {
-            return null;
-          }
-          return currentId;
+        setSelectedIds((currentIds) => {
+          return currentIds.filter((id) => nextDoc.layers.some((l) => l.id === id));
         });
       }
     }
   }, []);
 
-  // Global Keyboard Shortcuts for Undo (Ctrl+Z / Cmd+Z) & Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)
+  const groupLayers = useCallback((ids?: string[]) => {
+    const targetIds = ids || selectedIdsRef.current;
+    if (targetIds.length < 2) return;
+
+    const newGroupId = `group-${Date.now()}`;
+    commitDocument((prev) => {
+      const prevLayers = prev?.layers || [];
+      const updatedLayers = prevLayers.map((l) => {
+        if (targetIds.includes(l.id)) {
+          return { ...l, groupId: newGroupId };
+        }
+        return l;
+      });
+      return { ...prev, layers: updatedLayers };
+    });
+    setSelectedIds(targetIds);
+  }, [commitDocument]);
+
+  const ungroupLayers = useCallback((ids?: string[]) => {
+    const targetIds = ids || selectedIdsRef.current;
+    if (targetIds.length === 0) return;
+
+    commitDocument((prev) => {
+      const prevLayers = prev?.layers || [];
+      const updatedLayers = prevLayers.map((l) => {
+        if (targetIds.includes(l.id) || (l.groupId && targetIds.includes(l.groupId))) {
+          const { groupId: _, ...rest } = l;
+          return rest as ICanvasLayer;
+        }
+        return l;
+      });
+      return { ...prev, layers: updatedLayers };
+    });
+  }, [commitDocument]);
+
+  // Global Keyboard Shortcuts for Undo (Ctrl+Z), Redo (Ctrl+Y / Ctrl+Shift+Z), Group (Ctrl+G), Ungroup (Ctrl+Shift+G)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = typeof window !== "undefined" ? (window.document.activeElement as HTMLElement | null) : null;
@@ -177,6 +219,18 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
 
       const key = e.key ? e.key.toLowerCase() : "";
       const code = e.code;
+
+      // Group: Ctrl+G / Ungroup: Ctrl+Shift+G
+      if (key === "g" || code === "KeyG") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.shiftKey) {
+          ungroupLayers();
+        } else {
+          groupLayers();
+        }
+        return;
+      }
 
       // Redo: Ctrl+Y OR Ctrl+Shift+Z OR Cmd+Shift+Z
       if (
@@ -199,13 +253,74 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [undo, redo]);
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [undo, redo, groupLayers, ungroupLayers]);
 
-  const selectLayer = useCallback((id: string | null) => {
-    setSelectedId(id);
+  // Auto-save debounced to localStorage
+  useEffect(() => {
+    if (!cardId || typeof window === "undefined") return;
+
+    setSaveStatus("saving");
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(`inviteme_canvas_${cardId}`, JSON.stringify(document));
+        setSaveStatus("saved");
+        setLastSavedTime(new Date());
+      } catch (err) {
+        console.error("Failed to auto-save canvas to localStorage", err);
+        setSaveStatus("saved");
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [document, cardId]);
+
+  const selectLayer = useCallback((id: string | null, isMulti = false) => {
+    if (id === null) {
+      setSelectedIds([]);
+      return;
+    }
+
+    const currentDoc = documentRef.current;
+    const clickedLayer = currentDoc?.layers?.find((l) => l.id === id);
+
+    if (isMulti) {
+      setSelectedIds((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((i) => i !== id);
+        } else {
+          return [...prev, id];
+        }
+      });
+      return;
+    }
+
+    // Single click: if layer belongs to a group, select all layers in the group!
+    if (clickedLayer?.groupId) {
+      const groupMembers = (currentDoc?.layers || [])
+        .filter((l) => l.groupId === clickedLayer.groupId)
+        .map((l) => l.id);
+      setSelectedIds(groupMembers.length > 0 ? groupMembers : [id]);
+    } else {
+      setSelectedIds([id]);
+    }
   }, []);
+
+  const moveMultipleLayers = useCallback((positions: { id: string; x: number; y: number }[]) => {
+    commitDocument((prev) => {
+      const prevLayers = prev?.layers || [];
+      const posMap = new Map(positions.map((p) => [p.id, p]));
+      const updatedLayers = prevLayers.map((l) => {
+        const p = posMap.get(l.id);
+        if (p) {
+          return { ...l, x: p.x, y: p.y };
+        }
+        return l;
+      });
+      return { ...prev, layers: updatedLayers };
+    });
+  }, [commitDocument]);
 
   const updateLayer = useCallback(
     (id: string, updates: Partial<ICanvasLayer>) => {
@@ -284,7 +399,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(id);
     },
-    [calculateSmartY, commitDocument]
+    [calculateSmartY, commitDocument, setSelectedId]
   );
 
   const addStickerLayer = useCallback(
@@ -317,7 +432,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(id);
     },
-    [calculateSmartY, commitDocument]
+    [calculateSmartY, commitDocument, setSelectedId]
   );
 
   const addImageLayer = useCallback(
@@ -351,7 +466,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(id);
     },
-    [calculateSmartY, commitDocument]
+    [calculateSmartY, commitDocument, setSelectedId]
   );
 
   const addShapeLayer = useCallback(
@@ -387,7 +502,166 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(id);
     },
-    [calculateSmartY, commitDocument]
+    [calculateSmartY, commitDocument, setSelectedId]
+  );
+
+  const addCalendarLayer = useCallback(
+    (preset?: Partial<ICanvasCalendarLayer>) => {
+      const id = `layer-cal-${Date.now()}`;
+      const smartY = calculateSmartY(undefined, 250);
+      const layersCount = documentRef.current?.layers?.length || 0;
+
+      const newCal: ICanvasCalendarLayer = {
+        id,
+        type: "calendar",
+        name: "Lịch Save The Date",
+        monthTitle: "Tháng 11 / 2026",
+        year: 2026,
+        month: 11,
+        startDayOfWeek: 6,
+        daysCount: 30,
+        selectedDay: 20,
+        primaryColor: "#851C24",
+        accentColor: "#EBDBC8",
+        backgroundColor: "#FFFFFF",
+        x: 45,
+        y: smartY,
+        width: 300,
+        height: 245,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        zIndex: layersCount + 1,
+        isLocked: false,
+        isHidden: false,
+        ...preset,
+      };
+
+      commitDocument((prev) => {
+        const prevLayers = prev?.layers || [];
+        return { ...prev, layers: [...prevLayers, newCal] };
+      });
+      setSelectedId(id);
+    },
+    [calculateSmartY, commitDocument, setSelectedId]
+  );
+
+  const addTimelineLayer = useCallback(
+    (preset?: Partial<ICanvasTimelineLayer>) => {
+      const id = `layer-timeline-${Date.now()}`;
+      const smartY = calculateSmartY(undefined, 230);
+      const layersCount = documentRef.current?.layers?.length || 0;
+
+      const newTimeline: ICanvasTimelineLayer = {
+        id,
+        type: "timeline",
+        name: "Lịch Trình Sự Kiện",
+        title: "LỊCH TRÌNH SỰ KIỆN",
+        primaryColor: "#851C24",
+        accentColor: "#D4AF37",
+        textColor: "#3B2F23",
+        items: [
+          { time: "17:30", title: "Đón Tiếp Khách Mời & Check-in", subTitle: "Chụp ảnh lưu niệm tại sảnh hoa" },
+          { time: "18:30", title: "Lễ Thành Hôn Chính Thức", subTitle: "Nghi thức trao nhẫn & cắt bánh mừng" },
+          { time: "19:00", title: "Khai Tiệc Mừng Hạnh Phúc", subTitle: "Thưởng thức ẩm thực & chúc mừng" },
+          { time: "20:30", title: "Giao Lưu & Chụp Hình Lưu Niệm", subTitle: "Mini game & chia sẻ cảm xúc" },
+        ],
+        x: 25,
+        y: smartY,
+        width: 340,
+        height: 220,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        zIndex: layersCount + 1,
+        isLocked: false,
+        isHidden: false,
+        ...preset,
+      };
+
+      commitDocument((prev) => {
+        const prevLayers = prev?.layers || [];
+        return { ...prev, layers: [...prevLayers, newTimeline] };
+      });
+      setSelectedId(id);
+    },
+    [calculateSmartY, commitDocument, setSelectedId]
+  );
+
+  const addCountdownLayer = useCallback(
+    (preset?: Partial<ICanvasCountdownLayer>) => {
+      const id = `layer-countdown-${Date.now()}`;
+      const smartY = calculateSmartY(undefined, 110);
+      const layersCount = documentRef.current?.layers?.length || 0;
+
+      const newCountdown: ICanvasCountdownLayer = {
+        id,
+        type: "countdown",
+        name: "Khung Đếm Ngược",
+        title: "Đếm ngược đến giờ sự kiện",
+        days: 13,
+        hours: 15,
+        minutes: 48,
+        primaryColor: "#851C24",
+        backgroundColor: "#FFFFFF",
+        x: 45,
+        y: smartY,
+        width: 300,
+        height: 105,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        zIndex: layersCount + 1,
+        isLocked: false,
+        isHidden: false,
+        ...preset,
+      };
+
+      commitDocument((prev) => {
+        const prevLayers = prev?.layers || [];
+        return { ...prev, layers: [...prevLayers, newCountdown] };
+      });
+      setSelectedId(id);
+    },
+    [calculateSmartY, commitDocument, setSelectedId]
+  );
+
+  const addEventInfoLayer = useCallback(
+    (preset?: Partial<ICanvasEventInfoLayer>) => {
+      const id = `layer-event-info-${Date.now()}`;
+      const smartY = calculateSmartY(undefined, 70);
+      const layersCount = documentRef.current?.layers?.length || 0;
+
+      const newEventInfo: ICanvasEventInfoLayer = {
+        id,
+        type: "event-info",
+        name: "Khung Ngày & Giờ",
+        dateLabel: "NGÀY",
+        dateValue: "Chủ Nhật\n20.11.2026",
+        timeLabel: "GIỜ",
+        timeValue: "Đón khách\n18:00",
+        primaryColor: "#851C24",
+        accentColor: "#E2D3BE",
+        x: 45,
+        y: smartY,
+        width: 300,
+        height: 60,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        zIndex: layersCount + 1,
+        isLocked: false,
+        isHidden: false,
+        ...preset,
+      };
+
+      commitDocument((prev) => {
+        const prevLayers = prev?.layers || [];
+        return { ...prev, layers: [...prevLayers, newEventInfo] };
+      });
+      setSelectedId(id);
+    },
+    [calculateSmartY, commitDocument, setSelectedId]
   );
 
   const duplicateLayer = useCallback(
@@ -412,7 +686,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(newId);
     },
-    [commitDocument]
+    [commitDocument, setSelectedId]
   );
 
   const deleteLayer = useCallback(
@@ -424,7 +698,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
       });
       setSelectedId(null);
     },
-    [commitDocument]
+    [commitDocument, setSelectedId]
   );
 
   const bringForward = useCallback(
@@ -509,23 +783,33 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
     [commitDocument]
   );
 
-  const selectedLayer = document?.layers?.find((l) => l.id === selectedId) || null;
+  const selectedLayers = (document?.layers || []).filter((l) => selectedIds.includes(l.id));
+  const selectedLayer = selectedLayers.length > 0 ? selectedLayers[selectedLayers.length - 1] : null;
 
   return {
     document,
     setDocument,
     selectedId,
+    selectedIds,
     selectedLayer,
+    selectedLayers,
     scale,
     setScale,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
     selectLayer,
     updateLayer,
+    moveMultipleLayers,
+    groupLayers,
+    ungroupLayers,
     addTextLayer,
     addImageLayer,
     addStickerLayer,
     addShapeLayer,
+    addCalendarLayer,
+    addTimelineLayer,
+    addCountdownLayer,
+    addEventInfoLayer,
     duplicateLayer,
     deleteLayer,
     bringForward,
@@ -536,6 +820,7 @@ export const useCanvasEditor = (initialDoc?: ICanvasDocument, cardId?: string) =
     expandCanvasHeight,
     undo,
     redo,
+    resetToPreset,
     saveStatus,
     lastSavedTime,
   };

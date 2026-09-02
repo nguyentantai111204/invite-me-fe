@@ -9,15 +9,19 @@ import {
   ICanvasTextLayer,
 } from "@/interfaces/canvas-editor.interface";
 import { COLOR, RADIUS, SHADOW, SPACING } from "@/constants/style.constant";
-import { IconElement, StackRowAlignJustCenter } from "@/components/shared";
+import { IconElement, StackRowAlignJustCenter, TextElement, ButtonElement } from "@/components/shared";
 import { CanvasLayerItem } from "./canvas-layer-item";
 
 interface ICanvasStageProps {
   document: ICanvasDocument;
   selectedId: string | null;
+  selectedIds?: string[];
   scale?: number;
-  onSelectLayer: (id: string | null) => void;
+  onSelectLayer: (id: string | null, isMulti?: boolean) => void;
   onUpdateLayer: (id: string, updates: Partial<ICanvasLayer>) => void;
+  onMoveMultipleLayers?: (positions: { id: string; x: number; y: number }[]) => void;
+  onGroupLayers?: (ids?: string[]) => void;
+  onUngroupLayers?: (ids?: string[]) => void;
   onDuplicateLayer?: (id: string) => void;
   onDeleteLayer?: (id: string) => void;
 }
@@ -25,9 +29,13 @@ interface ICanvasStageProps {
 export const CanvasStage: React.FC<ICanvasStageProps> = ({
   document,
   selectedId,
+  selectedIds,
   scale = 1,
   onSelectLayer,
   onUpdateLayer,
+  onMoveMultipleLayers,
+  onGroupLayers,
+  onUngroupLayers,
   onDuplicateLayer,
   onDeleteLayer,
 }) => {
@@ -38,6 +46,12 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const moveableRef = useRef<Moveable>(null);
+  const dragStartPositionsRef = useRef<{ id: string; x: number; y: number }[]>([]);
+
+  const effectiveSelectedIds = React.useMemo(
+    () => (selectedIds && selectedIds.length > 0 ? selectedIds : selectedId ? [selectedId] : []),
+    [selectedIds, selectedId]
+  );
 
   useEffect(() => {
     setIsClient(true);
@@ -63,14 +77,14 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (editingTextId) return;
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && onDeleteLayer) {
+      if ((e.key === "Delete" || e.key === "Backspace") && onDeleteLayer && effectiveSelectedIds.length > 0) {
         if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
-        onDeleteLayer(selectedId);
+        effectiveSelectedIds.forEach((id) => onDeleteLayer(id));
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedId, onDeleteLayer, editingTextId]);
+  }, [effectiveSelectedIds, onDeleteLayer, editingTextId]);
 
   // Handle Double Click to edit Text in-place
   const handleTextDblClick = (layer: ICanvasTextLayer) => {
@@ -87,18 +101,56 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
   };
 
   const layersList = [...(document.layers || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+  const selectedLayers = layersList.filter((l) => effectiveSelectedIds.includes(l.id));
   const selectedLayer = layersList.find((l) => l.id === selectedId);
   const editingLayer = layersList.find((l) => l.id === editingTextId) as ICanvasTextLayer | undefined;
+  const isGroupedSelection = selectedLayers.some((l) => !!l.groupId);
 
   // Drag handlers for Moveable
-  const handleDrag = useCallback(({ target, left, top }: OnDrag) => {
-    target.style.left = `${Math.round(left)}px`;
-    target.style.top = `${Math.round(top)}px`;
-  }, []);
+  const handleDragStart = useCallback(() => {
+    dragStartPositionsRef.current = layersList
+      .filter((l) => effectiveSelectedIds.includes(l.id))
+      .map((l) => ({ id: l.id, x: l.x, y: l.y }));
+  }, [effectiveSelectedIds, layersList]);
+
+  const handleDrag = useCallback(
+    ({ target, left, top, beforeTranslate }: OnDrag) => {
+      if (effectiveSelectedIds.length > 1) {
+        const [deltaX, deltaY] = beforeTranslate;
+        dragStartPositionsRef.current.forEach((pos) => {
+          const el = containerRef.current?.querySelector<HTMLElement>(`[data-layer-id="${pos.id}"]`);
+          if (el) {
+            el.style.transform = `translate3d(${Math.round(deltaX)}px, ${Math.round(deltaY)}px, 0px)`;
+          }
+        });
+      } else {
+        target.style.left = `${Math.round(left)}px`;
+        target.style.top = `${Math.round(top)}px`;
+      }
+    },
+    [effectiveSelectedIds]
+  );
 
   const handleDragEnd = useCallback(
-    ({ target, isDrag }: { target: HTMLElement | SVGElement; isDrag: boolean }) => {
-      if (isDrag && selectedId) {
+    ({ target, isDrag, lastEvent }: any) => {
+      if (!isDrag) return;
+
+      if (effectiveSelectedIds.length > 1 && onMoveMultipleLayers) {
+        const deltaX = Math.round(lastEvent?.beforeTranslate?.[0] || 0);
+        const deltaY = Math.round(lastEvent?.beforeTranslate?.[1] || 0);
+
+        dragStartPositionsRef.current.forEach((pos) => {
+          const el = containerRef.current?.querySelector<HTMLElement>(`[data-layer-id="${pos.id}"]`);
+          if (el) el.style.transform = "";
+        });
+
+        const newPositions = dragStartPositionsRef.current.map((pos) => ({
+          id: pos.id,
+          x: pos.x + deltaX,
+          y: pos.y + deltaY,
+        }));
+        onMoveMultipleLayers(newPositions);
+      } else if (selectedId) {
         const x = Math.round(parseFloat(target.style.left) || 0);
         const y = Math.round(parseFloat(target.style.top) || 0);
         target.style.left = "";
@@ -106,7 +158,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
         onUpdateLayer(selectedId, { x, y });
       }
     },
-    [onUpdateLayer, selectedId]
+    [effectiveSelectedIds, onMoveMultipleLayers, onUpdateLayer, selectedId]
   );
 
   // Resize handlers for Moveable
@@ -197,8 +249,8 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
         flexShrink: 0,
       }}
     >
-      {/* Floating Context Toolbar */}
-      {selectedLayer && !editingTextId && (() => {
+      {/* Floating Context Toolbar: Single Selected Layer */}
+      {effectiveSelectedIds.length === 1 && selectedLayer && !editingTextId && (() => {
         const layerTop = selectedLayer.y * scale;
         const layerHeight = ((selectedLayer as any).height || (selectedLayer as any).fontSize || 35) * scale;
         const layerCenterX = (selectedLayer.x + (selectedLayer.width || 200) / 2) * scale;
@@ -318,6 +370,86 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
         );
       })()}
 
+      {/* Floating Context Toolbar: Multi-Selected / Grouped Layers */}
+      {effectiveSelectedIds.length > 1 && (() => {
+        const minTop = Math.min(...selectedLayers.map((l) => l.y)) * scale;
+        const avgX =
+          (selectedLayers.reduce((acc, l) => acc + l.x + (l.width || 200) / 2, 0) / selectedLayers.length) * scale;
+        const toolbarTop = minTop > 55 ? minTop - 46 : minTop + 80;
+        const toolbarLeft = Math.max(140, Math.min(docWidth * scale - 140, avgX));
+
+        return (
+          <Paper
+            elevation={6}
+            sx={{
+              position: "absolute",
+              top: `${toolbarTop}px`,
+              left: `${toolbarLeft}px`,
+              transform: "translateX(-50%)",
+              zIndex: 1250,
+              borderRadius: RADIUS.full,
+              backgroundColor: "rgba(255, 255, 255, 0.98)",
+              backdropFilter: "blur(8px)",
+              border: `1.5px solid ${COLOR.gold.main}`,
+              boxShadow: SHADOW.md,
+              display: "flex",
+              alignItems: "center",
+              p: SPACING.px4,
+              px: SPACING.px12,
+              gap: SPACING.px8,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ fontSize: "0.72rem" }}>
+              Đã chọn {effectiveSelectedIds.length} phần tử
+            </TextElement>
+
+            {onGroupLayers && (
+              <Tooltip title="Nhóm lại để di chuyển cùng nhau (Ctrl+G)">
+                <ButtonElement
+                  variant="gradient"
+                  size="small"
+                  rounded="full"
+                  onClick={() => onGroupLayers(effectiveSelectedIds)}
+                  leftIcon={<IconElement name="Group" size="xs" />}
+                  sx={{ height: 28, fontSize: "0.68rem", px: SPACING.px8 }}
+                >
+                  Nhóm (Group)
+                </ButtonElement>
+              </Tooltip>
+            )}
+
+            {isGroupedSelection && onUngroupLayers && (
+              <Tooltip title="Rã nhóm (Ctrl+Shift+G)">
+                <ButtonElement
+                  variant="outline"
+                  size="small"
+                  rounded="full"
+                  onClick={() => onUngroupLayers(effectiveSelectedIds)}
+                  leftIcon={<IconElement name="LayersClear" size="xs" />}
+                  sx={{ height: 28, fontSize: "0.68rem", px: SPACING.px8, borderColor: COLOR.borderGoldLight }}
+                >
+                  Rã Nhóm
+                </ButtonElement>
+              </Tooltip>
+            )}
+
+            {onDeleteLayer && (
+              <Tooltip title="Xóa tất cả các phần tử đã chọn">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => effectiveSelectedIds.forEach((id) => onDeleteLayer(id))}
+                  sx={{ p: 0.5 }}
+                >
+                  <IconElement name="Delete" size="xs" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Paper>
+        );
+      })()}
+
       {/* Main HTML DOM Canvas Stage */}
       <Box
         ref={containerRef}
@@ -344,12 +476,12 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
           <CanvasLayerItem
             key={layer.id}
             layer={layer}
-            isSelected={selectedId === layer.id}
+            isSelected={effectiveSelectedIds.includes(layer.id)}
             isEditing={editingTextId === layer.id}
             isEditorMode={true}
             onClick={(e) => {
               e.stopPropagation();
-              onSelectLayer(layer.id);
+              onSelectLayer(layer.id, e.shiftKey || e.ctrlKey || e.metaKey);
             }}
             onDoubleClick={(e) => {
               e.stopPropagation();
@@ -369,8 +501,8 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
             origin={false}
             zoom={1}
             draggable={true}
-            resizable={true}
-            rotatable={true}
+            resizable={effectiveSelectedIds.length === 1}
+            rotatable={effectiveSelectedIds.length === 1}
             snappable={true}
             verticalGuidelines={[docWidth / 2]}
             horizontalGuidelines={[docHeight / 2]}
@@ -388,6 +520,7 @@ export const CanvasStage: React.FC<ICanvasStageProps> = ({
             throttleDrag={0}
             throttleResize={0}
             throttleRotate={0}
+            onDragStart={handleDragStart}
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             onResizeStart={handleResizeStart}

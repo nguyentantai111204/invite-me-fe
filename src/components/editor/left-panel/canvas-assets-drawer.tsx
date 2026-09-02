@@ -32,10 +32,13 @@ import {
 interface ICanvasAssetsDrawerProps {
   layers?: ICanvasLayer[];
   selectedId?: string | null;
+  selectedIds?: string[];
   openingEffect?: CanvasOpeningEffectType;
   ambientParticle?: CanvasAmbientParticleType;
-  onSelectLayer?: (id: string | null) => void;
+  onSelectLayer?: (id: string | null, isMulti?: boolean) => void;
   onUpdateLayer?: (id: string, updates: Partial<ICanvasLayer>) => void;
+  onGroupLayers?: (ids?: string[]) => void;
+  onUngroupLayers?: (ids?: string[]) => void;
   onDeleteLayer?: (id: string) => void;
   onDuplicateLayer?: (id: string) => void;
   onBringForward?: (id: string) => void;
@@ -53,18 +56,23 @@ interface ICanvasAssetsDrawerProps {
   onAddSticker: (emoji: string, size?: number) => void;
   onAddShape: (type: "rect" | "circle" | "divider") => void;
   onAddImage: (src: string) => void;
+  onAddCalendar?: (preset?: any) => void;
+  onAddTimeline?: (preset?: any) => void;
+  onAddCountdown?: (preset?: any) => void;
+  onAddEventInfo?: (preset?: any) => void;
   onSetBackground: (color: string) => void;
 }
 
-type TabType = "layers" | "text" | "stickers" | "effects" | "shapes" | "uploads" | "backgrounds";
+type TabType = "layers" | "widgets" | "text" | "stickers" | "shapes" | "uploads" | "effects" | "backgrounds";
 
 const NAV_ITEMS: { id: TabType; label: string; icon: IconName; tip: string }[] = [
   { id: "layers", label: "Layers", icon: "Layers", tip: "Xem & quản lý tất cả các phần tử trên thiệp" },
+  { id: "widgets", label: "Tiện Ích", icon: "CalendarToday", tip: "Lịch cưới, Lịch trình sự kiện, Đếm ngược, Ngày & Giờ" },
   { id: "text", label: "Mẫu Chữ", icon: "TextFormat", tip: "Chèn tiêu đề, lời mời, ngày cưới" },
   { id: "stickers", label: "Họa Tiết", icon: "Favorite", tip: "Sticker hoa lá, nhẫn cưới" },
-  { id: "effects", label: "Hiệu Ứng", icon: "AutoAwesome", tip: "Hiệu ứng mở 3D & hạt rơi" },
   { id: "shapes", label: "Khung Hình", icon: "Crop", tip: "Khung chân dung, dải phân cách" },
-  { id: "uploads", label: "Tải Ảnh", icon: "CloudUpload", tip: "Tải ảnh cưới từ thiết bị" },
+  { id: "uploads", label: "Tải Ảnh", icon: "CloudUpload", tip: "Tải ảnh cưới từ thiết bị & ảnh mẫu" },
+  { id: "effects", label: "Hiệu Ứng", icon: "AutoAwesome", tip: "Hiệu ứng mở 3D & hạt rơi" },
   { id: "backgrounds", label: "Màu Nền", icon: "Palette", tip: "Tông màu nền thiệp sang trọng" },
 ];
 
@@ -146,10 +154,13 @@ const BG_PRESETS = [
 export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
   layers = [],
   selectedId,
+  selectedIds,
   openingEffect = "envelope-3d",
   ambientParticle = "sakura",
   onSelectLayer,
   onUpdateLayer,
+  onGroupLayers,
+  onUngroupLayers,
   onDeleteLayer,
   onBringForward,
   onSendBackward,
@@ -159,11 +170,17 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
   onAddSticker,
   onAddShape,
   onAddImage,
+  onAddCalendar,
+  onAddTimeline,
+  onAddCountdown,
+  onAddEventInfo,
   onSetBackground,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("layers");
   const [stickerFilter, setStickerFilter] = useState<"all" | "floral" | "rings" | "badges">("all");
   const [customBgHex, setCustomBgHex] = useState<string>(COLOR.bgPrimary);
+
+  const effectiveSelectedIds = selectedIds && selectedIds.length > 0 ? selectedIds : (selectedId ? [selectedId] : []);
 
   const handleCustomBgChange = (hex: string) => {
     setCustomBgHex(hex);
@@ -278,21 +295,65 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                   DANH SÁCH LỚP ({layers.length})
                 </HeadingElement>
                 <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem" }}>
-                  Thứ tự từ trên xuống dưới trên thiệp
+                  Giữ Shift để chọn nhiều lớp & nhóm lại
                 </TextElement>
               </StackCol>
 
-              {selectedId && onSelectLayer && (
+              {effectiveSelectedIds.length > 0 && onSelectLayer && (
                 <ButtonElement
                   variant="text"
                   size="small"
                   onClick={() => onSelectLayer(null)}
                   sx={{ fontSize: "0.68rem", p: 0, color: COLOR.textSecondary }}
                 >
-                  Bỏ chọn
+                  Bỏ chọn ({effectiveSelectedIds.length})
                 </ButtonElement>
               )}
             </StackRowAlignJustBetween>
+
+            {/* Quick Group / Ungroup Toolbar if multiple layers selected */}
+            {effectiveSelectedIds.length > 1 && (
+              <StackRowAlignJustBetween
+                sx={{
+                  p: "6px 10px",
+                  borderRadius: RADIUS.sm,
+                  backgroundColor: `${COLOR.gold.main}14`,
+                  border: `1px solid ${COLOR.gold.main}`,
+                  alignItems: "center",
+                }}
+              >
+                <TextElement size="xs" weight="bold" colorVariant="gold" sx={{ fontSize: "0.7rem" }}>
+                  Đã chọn {effectiveSelectedIds.length} lớp
+                </TextElement>
+
+                <StackRow sx={{ gap: "4px" }}>
+                  {onGroupLayers && (
+                    <ButtonElement
+                      variant="gradient"
+                      size="small"
+                      rounded="full"
+                      onClick={() => onGroupLayers(effectiveSelectedIds)}
+                      leftIcon={<IconElement name="Group" size="xs" />}
+                      sx={{ height: 24, fontSize: "0.65rem", px: SPACING.px6 }}
+                    >
+                      Nhóm
+                    </ButtonElement>
+                  )}
+                  {onUngroupLayers && layers.some((l) => effectiveSelectedIds.includes(l.id) && l.groupId) && (
+                    <ButtonElement
+                      variant="outline"
+                      size="small"
+                      rounded="full"
+                      onClick={() => onUngroupLayers(effectiveSelectedIds)}
+                      leftIcon={<IconElement name="LayersClear" size="xs" />}
+                      sx={{ height: 24, fontSize: "0.65rem", px: SPACING.px6, borderColor: COLOR.borderGoldLight }}
+                    >
+                      Rã
+                    </ButtonElement>
+                  )}
+                </StackRow>
+              </StackRowAlignJustBetween>
+            )}
 
             <Divider sx={{ borderColor: COLOR.divider }} />
 
@@ -309,7 +370,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                 {[...layers]
                   .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
                   .map((layer) => {
-                    const isSelected = selectedId === layer.id;
+                    const isSelected = effectiveSelectedIds.includes(layer.id);
                     const getIcon = (): IconName => {
                       switch (layer.type) {
                         case "text":
@@ -320,6 +381,14 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                           return "Crop";
                         case "sticker":
                           return "AutoAwesome";
+                        case "calendar":
+                          return "CalendarToday";
+                        case "timeline":
+                          return "History";
+                        case "countdown":
+                          return "DashboardCustomize";
+                        case "event-info":
+                          return "CalendarToday";
                         default:
                           return "Layers";
                       }
@@ -328,14 +397,14 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                     return (
                       <Box
                         key={layer.id}
-                        onClick={() => onSelectLayer && onSelectLayer(layer.id)}
+                        onClick={(e) => onSelectLayer && onSelectLayer(layer.id, e.shiftKey || e.ctrlKey || e.metaKey)}
                         sx={{
                           width: "100%",
                           boxSizing: "border-box",
                           p: SPACING.px8,
                           borderRadius: RADIUS.sm,
                           backgroundColor: isSelected ? COLOR.gold[50] : COLOR.bgSecondary,
-                          border: `1.5px solid ${isSelected ? COLOR.gold.main : COLOR.borderGoldLight}`,
+                          border: `1.5px solid ${isSelected ? COLOR.gold.main : layer.groupId ? COLOR.borderGoldLight : COLOR.divider}`,
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
@@ -348,7 +417,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                           },
                         }}
                       >
-                        {/* Left: Icon + Name */}
+                        {/* Left: Icon + Name + Group badge */}
                         <StackRowAlignJustStart sx={{ gap: SPACING.px6, alignItems: "center", minWidth: 0, flex: 1, overflow: "hidden" }}>
                           <StackCenter
                             sx={{
@@ -384,7 +453,7 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                                   opacity: layer.isHidden ? 0.5 : 1,
                                 }}
                               >
-                                {layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
+                                {layer.groupId && "🔗 "}{layer.name || (layer.type === "text" ? (layer as ICanvasTextLayer).text : layer.type)}
                               </TextElement>
                             </Box>
                           </Tooltip>
@@ -482,6 +551,139 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
                   })}
               </StackCol>
             )}
+          </StackCol>
+        )}
+
+        {/* ── Tab: Tiện Ích Cưới (Widgets: Lịch, Timeline, Đếm Ngược, Ngày Giờ) ── */}
+        {activeTab === "widgets" && (
+          <StackCol spacing={SPACING.px16}>
+            <HeadingElement variant="h6" weight="bold" sx={{ fontSize: FONT_SIZE.sm }}>
+              TIỆN ÍCH SỰ KIỆN
+            </HeadingElement>
+
+            {/* 1. Widget Lịch Save The Date */}
+            <Box
+              sx={{
+                p: SPACING.px12,
+                borderRadius: RADIUS.md,
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                backgroundColor: COLOR.bgSecondary,
+                transition: ANIMATION.sm,
+                "&:hover": { borderColor: COLOR.gold.main },
+              }}
+            >
+              <StackRowAlignJustBetween sx={{ mb: SPACING.px8 }}>
+                <TextElement size="xs" weight="bold" sx={{ color: "#851C24", fontSize: "0.75rem" }}>
+                  📅 Lịch Save The Date
+                </TextElement>
+                <ButtonElement
+                  variant="gradient"
+                  size="small"
+                  rounded="sm"
+                  onClick={() => onAddCalendar && onAddCalendar()}
+                  leftIcon={<IconElement name="Add" size="xs" />}
+                  sx={{ height: 26, fontSize: "0.68rem", px: SPACING.px8 }}
+                >
+                  Chèn
+                </ButtonElement>
+              </StackRowAlignJustBetween>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", lineHeight: 1.3 }}>
+                Lưới lịch 7 cột chuẩn quốc tế với huy hiệu trái tim nổi bật trên ngày diễn ra sự kiện.
+              </TextElement>
+            </Box>
+
+            {/* 2. Widget Lịch Trình Sự Kiện (Timeline) */}
+            <Box
+              sx={{
+                p: SPACING.px12,
+                borderRadius: RADIUS.md,
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                backgroundColor: COLOR.bgSecondary,
+                transition: ANIMATION.sm,
+                "&:hover": { borderColor: COLOR.gold.main },
+              }}
+            >
+              <StackRowAlignJustBetween sx={{ mb: SPACING.px8 }}>
+                <TextElement size="xs" weight="bold" sx={{ color: "#851C24", fontSize: "0.75rem" }}>
+                  🕒 Lịch Trình Sự Kiện (Timeline)
+                </TextElement>
+                <ButtonElement
+                  variant="gradient"
+                  size="small"
+                  rounded="sm"
+                  onClick={() => onAddTimeline && onAddTimeline()}
+                  leftIcon={<IconElement name="Add" size="xs" />}
+                  sx={{ height: 26, fontSize: "0.68rem", px: SPACING.px8 }}
+                >
+                  Chèn
+                </ButtonElement>
+              </StackRowAlignJustBetween>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", lineHeight: 1.3 }}>
+                Trục thời gian vàng ánh kim kết nối các mốc giờ đón khách, làm lễ, khai tiệc và chụp ảnh.
+              </TextElement>
+            </Box>
+
+            {/* 3. Widget Đếm Ngược Thời Gian (Countdown) */}
+            <Box
+              sx={{
+                p: SPACING.px12,
+                borderRadius: RADIUS.md,
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                backgroundColor: COLOR.bgSecondary,
+                transition: ANIMATION.sm,
+                "&:hover": { borderColor: COLOR.gold.main },
+              }}
+            >
+              <StackRowAlignJustBetween sx={{ mb: SPACING.px8 }}>
+                <TextElement size="xs" weight="bold" sx={{ color: "#851C24", fontSize: "0.75rem" }}>
+                  ⏳ Hộp Đếm Ngược Ngày Cưới
+                </TextElement>
+                <ButtonElement
+                  variant="gradient"
+                  size="small"
+                  rounded="sm"
+                  onClick={() => onAddCountdown && onAddCountdown()}
+                  leftIcon={<IconElement name="Add" size="xs" />}
+                  sx={{ height: 26, fontSize: "0.68rem", px: SPACING.px8 }}
+                >
+                  Chèn
+                </ButtonElement>
+              </StackRowAlignJustBetween>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", lineHeight: 1.3 }}>
+                Thẻ đếm ngược 3 cột Ngày - Giờ - Phút sang trọng theo phong cách hoàng kim.
+              </TextElement>
+            </Box>
+
+            {/* 4. Widget Khung Thông Tin Ngày & Giờ (Event Info) */}
+            <Box
+              sx={{
+                p: SPACING.px12,
+                borderRadius: RADIUS.md,
+                border: `1px solid ${COLOR.borderGoldLight}`,
+                backgroundColor: COLOR.bgSecondary,
+                transition: ANIMATION.sm,
+                "&:hover": { borderColor: COLOR.gold.main },
+              }}
+            >
+              <StackRowAlignJustBetween sx={{ mb: SPACING.px8 }}>
+                <TextElement size="xs" weight="bold" sx={{ color: "#851C24", fontSize: "0.75rem" }}>
+                  📋 Khung Ngày & Giờ Đón Khách
+                </TextElement>
+                <ButtonElement
+                  variant="gradient"
+                  size="small"
+                  rounded="sm"
+                  onClick={() => onAddEventInfo && onAddEventInfo()}
+                  leftIcon={<IconElement name="Add" size="xs" />}
+                  sx={{ height: 26, fontSize: "0.68rem", px: SPACING.px8 }}
+                >
+                  Chèn
+                </ButtonElement>
+              </StackRowAlignJustBetween>
+              <TextElement size="xs" colorVariant="secondary" sx={{ fontSize: "0.68rem", lineHeight: 1.3 }}>
+                Bố cục 2 cột song song hiển thị Thứ/Ngày cưới và Giờ cử hành đón khách.
+              </TextElement>
+            </Box>
           </StackCol>
         )}
 
@@ -950,10 +1152,11 @@ export const CanvasAssetsDrawer: React.FC<ICanvasAssetsDrawerProps> = ({
               }}
             >
               {[
-                "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80",
-                "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80",
-                "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=600&q=80",
-                "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80",
+                "/images/anh-mau-1.jpg",
+                "/images/anh-mau-2.jpg",
+                "/images/anh-mau-3.jpg",
+                "/images/anh-mau-4.jpg",
+                "/images/anh-mau-5.jpg",
               ].map((src, idx) => (
                 <Box
                   key={idx}
